@@ -1,0 +1,3618 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="হিসাবের খাতা - আপনার প্রতিদিনের হিসাব সহজে ও নিরাপদে রাখুন" />
+  <title>হিসাবের খাতা - Hisaber Khata</title>
+  
+  <!-- Google Fonts: Hind Siliguri for Bangla, Inter for Numbers/Latin -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- React, ReactDOM & Babel CDN for in-browser JSX parsing -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-hover: #115e59;
+      --primary-light: #f0fdf4;
+      --primary-dark: #134e4a;
+      
+      --income-color: #0d9488;
+      --income-bg: #ccfbf1;
+      --expense-color: #e11d48;
+      --expense-bg: #ffe4e6;
+      --due-color: #ea580c;
+      --due-bg: #ffedd5;
+      
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-input: #f1f5f9;
+      
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-white: #ffffff;
+      
+      --border: #e2e8f0;
+      --border-focus: #0f766e;
+      
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      
+      --font-bengali: 'Hind Siliguri', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --nav-height: calc(68px + var(--safe-bottom));
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-bengali);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f1f5f9;
+      color: var(--text-main);
+      line-height: 1.5;
+      font-size: 16px;
+      overflow-x: hidden;
+    }
+
+    /* Base Layout Wrapper */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: var(--bg-main);
+      box-shadow: 0 0 20px rgba(15, 23, 42, 0.08);
+      position: relative;
+      padding-bottom: var(--nav-height);
+    }
+
+    /* Header */
+    .app-header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--text-white);
+      padding: 24px 20px;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .header-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .header-subtitle {
+      font-size: 14px;
+      opacity: 0.85;
+      font-weight: 300;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 600px;
+      height: var(--nav-height);
+      background-color: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 50;
+      padding-bottom: var(--safe-bottom);
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.03);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 20%;
+      height: 100%;
+      transition: color 0.2s ease, transform 0.1s ease;
+      position: relative;
+    }
+
+    .nav-item svg {
+      margin-bottom: 4px;
+      transition: transform 0.2s ease;
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .nav-item.active svg {
+      transform: scale(1.1);
+    }
+
+    /* Floating Action Button (FAB) */
+    .fab {
+      position: fixed;
+      bottom: calc(var(--nav-height) + 16px);
+      right: calc(50% - 300px + 20px);
+      background-color: var(--primary);
+      color: var(--text-white);
+      border: none;
+      border-radius: 50px;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-lg);
+      cursor: pointer;
+      z-index: 45;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    @media (max-width: 640px) {
+      .fab {
+        right: 20px;
+      }
+    }
+
+    .fab:active {
+      transform: scale(0.95);
+      background-color: var(--primary-hover);
+    }
+
+    /* Scrollable Content */
+    .content-area {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background-color: var(--bg-main);
+    }
+
+    /* Summary Cards (Dashboard) */
+    .summary-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .summary-card {
+      background-color: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100px;
+    }
+
+    .summary-card.full-width {
+      grid-column: span 2;
+      background: linear-gradient(135deg, #0f766e, #14b8a6);
+      color: var(--text-white);
+      border: none;
+    }
+
+    .summary-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .summary-card.full-width .summary-label {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .summary-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    .summary-card.full-width .summary-value {
+      font-size: 28px;
+      color: var(--text-white);
+    }
+
+    /* Account Category Section */
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 20px 0 12px;
+      color: var(--text-main);
+    }
+
+    .categories-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .category-card {
+      background-color: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      border-left: 6px solid var(--border);
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+
+    .category-card.income { border-left-color: var(--income-color); }
+    .category-card.expense { border-left-color: var(--expense-color); }
+    .category-card.expense-blue { border-left-color: #3b82f6; }
+    .category-card.due { border-left-color: var(--due-color); }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .category-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .category-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .category-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .icon-button:hover {
+      background-color: var(--bg-input);
+      color: var(--primary);
+    }
+
+    .category-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .category-amount {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .category-amount.income { color: var(--income-color); }
+    .category-amount.expense { color: var(--expense-color); }
+    .category-amount.due { color: var(--due-color); }
+
+    .category-stats {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .category-footer {
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-view-all {
+      color: var(--primary);
+      font-weight: 600;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Modals & Forms */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    @media (min-width: 600px) {
+      .modal-overlay {
+        align-items: center;
+      }
+    }
+
+    .modal-content {
+      background-color: var(--bg-card);
+      width: 100%;
+      max-width: 600px;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      padding: 24px 20px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @media (min-width: 600px) {
+      .modal-content {
+        border-radius: 24px;
+        width: 90%;
+      }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    .input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background-color: var(--bg-input);
+      border: 1px solid transparent;
+      border-radius: 12px;
+      font-size: 16px;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--border-focus);
+      background-color: var(--bg-card);
+    }
+
+    .input-with-action {
+      padding-right: 50px;
+    }
+
+    .input-action-btn {
+      position: absolute;
+      right: 8px;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      border: none;
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+    }
+
+    .input-action-btn:active {
+      opacity: 0.8;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: var(--text-white);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-input);
+      color: var(--text-main);
+    }
+
+    .btn-danger {
+      background-color: var(--expense-color);
+      color: var(--text-white);
+    }
+
+    /* Calculator Style */
+    .calculator-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .calc-display {
+      grid-column: span 4;
+      background-color: var(--text-main);
+      color: #10b981;
+      padding: 16px;
+      border-radius: 12px;
+      text-align: right;
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'Inter', monospace;
+      letter-spacing: 1px;
+      min-height: 68px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .calc-formula {
+      font-size: 14px;
+      color: var(--text-muted);
+      opacity: 0.8;
+      margin-bottom: 4px;
+      font-family: 'Inter', monospace;
+    }
+
+    .calc-btn {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 20px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.1s;
+    }
+
+    .calc-btn:active {
+      background-color: #cbd5e1;
+    }
+
+    .calc-btn.op {
+      background-color: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .calc-btn.op:active {
+      background-color: #ccfbf1;
+    }
+
+    .calc-btn.eq {
+      background-color: var(--primary);
+      color: var(--text-white);
+    }
+
+    .calc-btn.eq:active {
+      background-color: var(--primary-hover);
+    }
+
+    /* Recent and History Lists */
+    .transaction-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .transaction-card {
+      background-color: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .transaction-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tx-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tx-serial {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background-color: var(--bg-input);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .tx-description {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .tx-details {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .tx-category-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 50px;
+      margin-top: 4px;
+    }
+
+    .tx-category-tag.income { color: var(--income-color); background-color: var(--income-bg); }
+    .tx-category-tag.expense { color: var(--expense-color); background-color: var(--expense-bg); }
+    .tx-category-tag.due { color: var(--due-color); background-color: var(--due-bg); }
+
+    .transaction-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .tx-amount {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .tx-amount.income { color: var(--income-color); }
+    .tx-amount.expense { color: var(--expense-color); }
+    .tx-amount.due { color: var(--due-color); }
+
+    .tx-actions {
+      display: flex;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .transaction-card:hover .tx-actions,
+    .transaction-card:active .tx-actions,
+    .transaction-card:focus-within .tx-actions {
+      opacity: 1;
+    }
+
+    /* History Screen Search and Filters */
+    .history-controls {
+      background-color: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      background-color: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      background-color: var(--bg-card);
+    }
+
+    .filters-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .filter-chip {
+      padding: 6px 14px;
+      border-radius: 50px;
+      background-color: var(--bg-main);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-chip.active {
+      background-color: var(--primary);
+      color: var(--text-white);
+      border-color: var(--primary);
+    }
+
+    /* Statistics/Report Cards */
+    .stats-summary {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stats-bar-container {
+      background-color: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .stats-bar-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      background-color: var(--bg-input);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .progress-fill {
+      height: 100%;
+    }
+
+    /* Settings List */
+    .settings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .settings-section {
+      background-color: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .settings-section-title {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .settings-row:last-child {
+      border-bottom: none;
+    }
+
+    .settings-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .settings-label {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .settings-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .settings-action {
+      cursor: pointer;
+      color: var(--primary);
+      font-weight: 600;
+      border: none;
+      background: none;
+      font-size: 14px;
+    }
+
+    .settings-action.danger {
+      color: var(--expense-color);
+    }
+
+    .credit-box {
+      text-align: center;
+      padding: 20px;
+      margin-top: 10px;
+    }
+
+    .credit-app-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .credit-by {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Prompt Confirmation Dialog Overlay */
+    .confirm-box {
+      background-color: var(--bg-card);
+      width: 90%;
+      max-width: 400px;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      animation: scaleUp 0.2s ease-out;
+    }
+
+    @keyframes scaleUp {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .confirm-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .confirm-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Responsive details for history controls columns */
+    .date-filter-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .date-input-wrapper {
+      display: flex;
+      flex-direction: column;
+    }
+    .date-input-wrapper label {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      color: var(--text-muted);
+    }
+    .date-input-wrapper input {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      background-color: var(--bg-main);
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+    }
+    /* Auth & PIN Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .profile-select-card:active {
+      transform: scale(0.98);
+      background-color: #e2e8f0 !important;
+    }
+    .keypad-btn:active {
+      background-color: #cbd5e1 !important;
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- Target root for React render -->
+  <div id="root"></div>
+
+  <!-- Inline SVGs & Components written in React JSX compiled by Babel -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // ==========================================
+    // INLINE SVG COMPONENTS (LUCI-REPLACEMENTS)
+    // ==========================================
+    const HomeIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    );
+    const ListIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    );
+    const CalculatorIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+    );
+    const ReportIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+    );
+    const SettingsIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    );
+    const SearchIcon = ({ size = 18 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    );
+    const ChevronDownIcon = ({ size = 16, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    );
+    const ChevronUpIcon = ({ size = 16, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    );
+    const TrashIcon = ({ size = 16 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+    );
+    const EditIcon = ({ size = 16 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    );
+    const ArrowUpRight = ({ size = 20, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+    );
+    const ArrowDownRight = ({ size = 20, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="7" x2="17" y2="17"/><polyline points="17 7 17 17 7 17"/></svg>
+    );
+    const ClockIcon = ({ size = 20, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    );
+    const ArrowRight = ({ size = 14 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    );
+    const PlusIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    );
+    const XIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    );
+    const BackspaceIcon = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+    );
+    const CheckIcon = ({ size = 18 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    );
+    const CheckCircleIcon = ({ size = 16, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    );
+    const AlertIcon = ({ size = 48 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    );
+    const DownloadIcon = ({ size = 18 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    );
+    const UploadIcon = ({ size = 18 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    );
+    const ShieldCheckIcon = ({ size = 16, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
+    );
+    const RefreshCwIcon = ({ size = 16 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    );
+    const HelpCircleIcon = ({ size = 22, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    );
+    const WalletIcon = ({ size = 22, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h4v-6z"/></svg>
+    );
+    const LockIcon = ({ size = 20, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    );
+    const UnlockIcon = ({ size = 20, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+    );
+    const UserPlusIcon = ({ size = 14, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    );
+    const UserIcon = ({ size = 20, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    );
+    const ArrowLeftIcon = ({ size = 20, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    );
+    const AlertCircleIcon = ({ size = 16, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    );
+    const KeyIcon = ({ size = 18, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 1.5 1.5M15.5 7.5 14 6"/></svg>
+    );
+    const InfoIcon = ({ size = 18, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    );
+
+    // ==========================================
+    // BANGLA FORMATTING UTILS
+    // ==========================================
+    const BANGLA_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    const ENGLISH_DIGITS = {
+      '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
+      '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9'
+    };
+
+    const toBanglaDigits = (num) => {
+      if (num === null || num === undefined) return '';
+      return num.toString().split('').map(char => {
+        const digit = parseInt(char, 10);
+        if (!isNaN(digit)) {
+          return BANGLA_DIGITS[digit];
+        }
+        return char;
+      }).join('');
+    };
+
+    const toEnglishDigits = (str) => {
+      if (str === null || str === undefined) return '';
+      return str.toString().split('').map(char => {
+        if (ENGLISH_DIGITS[char] !== undefined) {
+          return ENGLISH_DIGITS[char];
+        }
+        return char;
+      }).join('');
+    };
+
+    const parseBanglaFloat = (str) => {
+      if (!str) return 0;
+      const englishStr = toEnglishDigits(str);
+      const cleaned = englishStr.replace(/[^0-9.-]/g, '');
+      const parsed = parseFloat(cleaned);
+      return isNaN(parsed) ? 0 : Math.round(parsed);
+    };
+
+    const BANGLA_MONTHS = {
+      '01': 'জানুয়ারি', '02': 'ফেব্রুয়ারি', '03': 'মার্চ', '04': 'এপ্রিল',
+      '05': 'মে', '06': 'জুন', '07': 'জুলাই', '08': 'আগস্ট',
+      '09': 'সেপ্টেম্বর', '10': 'অক্টোবর', '11': 'নভেম্বর', '12': 'ডিসেম্বর'
+    };
+
+    const formatBanglaDate = (dateStr) => {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return toBanglaDigits(dateStr);
+      
+      const year = parts[0];
+      const month = parts[1];
+      const day = parseInt(parts[2], 10);
+      
+      const banglaDay = toBanglaDigits(day);
+      const banglaMonth = BANGLA_MONTHS[month] || month;
+      const banglaYear = toBanglaDigits(year);
+      
+      return `${banglaDay} ${banglaMonth} ${banglaYear}`;
+    };
+
+    const formatBanglaTime = (timeStr) => {
+      if (!timeStr) return '';
+      const parts = timeStr.split(':');
+      if (parts.length !== 2) return toBanglaDigits(timeStr);
+      
+      let hours = parseInt(parts[0], 10);
+      const minutes = parts[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      
+      const displayHours = hours < 10 ? '0' + hours : hours.toString();
+      return `${toBanglaDigits(displayHours)}:${toBanglaDigits(minutes)} ${ampm}`;
+    };
+
+    const formatBanglaCurrency = (amount) => {
+      if (amount === undefined || amount === null) return '৳০';
+      const isNegative = amount < 0;
+      const absAmount = Math.abs(amount);
+      
+      const integerAmount = Math.round(absAmount);
+      let integerPart = integerAmount.toString();
+      
+      let formattedInteger = integerPart;
+      if (integerPart.length > 3) {
+        let lastThree = integerPart.substring(integerPart.length - 3);
+        const otherParts = integerPart.substring(0, integerPart.length - 3);
+        formattedInteger = otherParts.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + ',' + lastThree;
+      }
+      
+      const banglaInteger = toBanglaDigits(formattedInteger);
+      return `${isNegative ? '-' : ''}৳${banglaInteger}`;
+    };
+
+    const padSerial = (serial) => {
+      if (serial === undefined || serial === null) return '০০০';
+      const num = parseInt(serial, 10);
+      if (isNaN(num)) return toBanglaDigits(serial);
+      const str = num.toString().padStart(3, '0');
+      return toBanglaDigits(str);
+    };
+
+    // ==========================================
+    // INITIAL DATA CONSTANTS
+    // ==========================================
+    const DEFAULT_CATEGORIES = {
+      borrowed: 'আমি ধার নিয়েছি',
+      receivable: 'আমি পাবো',
+      expense: 'ক্রয় / খরচ',
+      owed: 'বাকি / বকেয়া'
+    };
+    const SAMPLE_TRANSACTIONS = [];
+
+    // ==========================================
+    // MULTI-PROFILE STORAGE SYSTEM
+    // ==========================================
+    const TRANSACTIONS_KEY_PREFIX = 'hisaber_khata_transactions_';
+    const CATEGORIES_KEY_PREFIX = 'hisaber_khata_categories_';
+    const USERS_KEY = 'hisaber_khata_users';
+    const CURRENT_USER_KEY = 'hisaber_khata_current_user';
+
+    const getStoredUsers = () => {
+      const data = localStorage.getItem(USERS_KEY);
+      if (!data) return [];
+      try { return JSON.parse(data); } catch (e) { return []; }
+    };
+    const saveStoredUsers = (users) => {
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    };
+    const getCurrentUser = () => {
+      const username = localStorage.getItem(CURRENT_USER_KEY);
+      if (!username) return null;
+      const users = getStoredUsers();
+      return users.find(u => u.username === username) || null;
+    };
+    const setCurrentUser = (username) => {
+      localStorage.setItem(CURRENT_USER_KEY, username);
+    };
+    const logoutUser = () => {
+      localStorage.removeItem(CURRENT_USER_KEY);
+    };
+    const getStoredCategories = (username) => {
+      const activeUser = username || localStorage.getItem(CURRENT_USER_KEY);
+      if (!activeUser) return DEFAULT_CATEGORIES;
+      const key = CATEGORIES_KEY_PREFIX + activeUser;
+      const data = localStorage.getItem(key);
+      if (!data) {
+        localStorage.setItem(key, JSON.stringify(DEFAULT_CATEGORIES));
+        return DEFAULT_CATEGORIES;
+      }
+      try { return JSON.parse(data); } catch (e) { return DEFAULT_CATEGORIES; }
+    };
+    const saveStoredCategories = (categories, username) => {
+      const activeUser = username || localStorage.getItem(CURRENT_USER_KEY);
+      if (!activeUser) return;
+      localStorage.setItem(CATEGORIES_KEY_PREFIX + activeUser, JSON.stringify(categories));
+    };
+    const getStoredTransactions = (username) => {
+      const activeUser = username || localStorage.getItem(CURRENT_USER_KEY);
+      if (!activeUser) return SAMPLE_TRANSACTIONS;
+      const key = TRANSACTIONS_KEY_PREFIX + activeUser;
+      const data = localStorage.getItem(key);
+      if (!data) {
+        localStorage.setItem(key, JSON.stringify(SAMPLE_TRANSACTIONS));
+        return SAMPLE_TRANSACTIONS;
+      }
+      try {
+        const parsed = JSON.parse(data);
+        const cleaned = parsed.filter(tx => tx && tx.id && !tx.id.startsWith('sample-'));
+        if (cleaned.length !== parsed.length) {
+          localStorage.setItem(key, JSON.stringify(cleaned));
+        }
+        return cleaned;
+      } catch (e) {
+        return SAMPLE_TRANSACTIONS;
+      }
+    };
+    const saveStoredTransactions = (transactions, username) => {
+      const activeUser = username || localStorage.getItem(CURRENT_USER_KEY);
+      if (!activeUser) return;
+      localStorage.setItem(TRANSACTIONS_KEY_PREFIX + activeUser, JSON.stringify(transactions));
+    };
+    const clearAllAppData = (username) => {
+      const activeUser = username || localStorage.getItem(CURRENT_USER_KEY);
+      if (!activeUser) return;
+      localStorage.setItem(TRANSACTIONS_KEY_PREFIX + activeUser, JSON.stringify([]));
+      localStorage.setItem(CATEGORIES_KEY_PREFIX + activeUser, JSON.stringify(DEFAULT_CATEGORIES));
+    };
+    const getUserDuesSum = (username) => {
+      const txs = getStoredTransactions(username);
+      let iOwe = 0;
+      let theyOwe = 0;
+      txs.forEach(tx => {
+        const pending = tx.pendingAmount || 0;
+        const type = tx.categoryType;
+        if (type === 'borrowed' || type === 'owed') {
+          iOwe += pending;
+        }
+        if (type === 'receivable') {
+          theyOwe += pending;
+        }
+      });
+      return { iOwe, theyOwe, totalPending: iOwe + theyOwe };
+    };
+    const migrateLegacyData = (username) => {
+      const legacyTxs = localStorage.getItem('hisaber_khata_transactions');
+      const legacyCats = localStorage.getItem('hisaber_khata_categories');
+      if (legacyTxs) {
+        try {
+          const parsed = JSON.parse(legacyTxs);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            localStorage.setItem(TRANSACTIONS_KEY_PREFIX + username, legacyTxs);
+          }
+        } catch (e) {}
+        localStorage.removeItem('hisaber_khata_transactions');
+      }
+      if (legacyCats) {
+        try {
+          const parsed = JSON.parse(legacyCats);
+          if (parsed && typeof parsed === 'object') {
+            localStorage.setItem(CATEGORIES_KEY_PREFIX + username, legacyCats);
+          }
+        } catch (e) {}
+        localStorage.removeItem('hisaber_khata_categories');
+      }
+    };
+
+    // ==========================================
+    // AUTHENTICATION SCREEN COMPONENT
+    // ==========================================
+    function AuthScreen({ onLoginSuccess }) {
+      const [users, setUsers] = useState([]);
+      const [screen, setScreen] = useState('list'); // 'list', 'register', 'pin'
+      const [name, setName] = useState('');
+      const [username, setUsername] = useState('');
+      const [pin, setPin] = useState('');
+      const [confirmPin, setConfirmPin] = useState('');
+      const [errorMsg, setErrorMsg] = useState('');
+      const [selectedUser, setSelectedUser] = useState(null);
+      const [pinInput, setPinInput] = useState('');
+      const [pinError, setPinError] = useState(false);
+
+      useEffect(() => {
+        const loadedUsers = getStoredUsers();
+        setUsers(loadedUsers);
+        if (loadedUsers.length === 0) {
+          setScreen('register');
+        }
+      }, [screen]);
+
+      const handleRegisterSubmit = (e) => {
+        e.preventDefault();
+        setErrorMsg('');
+        if (!name.trim()) {
+          setErrorMsg('অনুগ্রহ করে আপনার নাম লিখুন।');
+          return;
+        }
+        const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (!cleanUsername) {
+          setErrorMsg('ইউজারনেম অবশ্যই ইংরেজি অক্ষর বা সংখ্যায় হতে হবে।');
+          return;
+        }
+        const usersList = getStoredUsers();
+        if (usersList.some(u => u.username === cleanUsername)) {
+          setErrorMsg('এই ইউজারনেমটি ইতিমধ্যে ব্যবহৃত হয়েছে। অন্য একটি নির্বাচন করুন।');
+          return;
+        }
+        if (pin.length !== 4 || isNaN(parseInt(pin, 10))) {
+          setErrorMsg('পিন কোডটি অবশ্যই ৪ সংখ্যার হতে হবে।');
+          return;
+        }
+        if (pin !== confirmPin) {
+          setErrorMsg('পিন কোড দুটি মেলেনি। আবার চেষ্টা করুন।');
+          return;
+        }
+        const newUser = {
+          username: cleanUsername,
+          name: name.trim(),
+          pin: pin,
+          createdDate: new Date().toISOString()
+        };
+        const updatedUsers = [...usersList, newUser];
+        saveStoredUsers(updatedUsers);
+        if (usersList.length === 0) {
+          migrateLegacyData(cleanUsername);
+        }
+        setCurrentUser(cleanUsername);
+        onLoginSuccess(newUser);
+      };
+
+      const handleKeypadPress = (val) => {
+        if (pinInput.length < 4) {
+          const newVal = pinInput + val;
+          setPinInput(newVal);
+          if (newVal.length === 4) {
+            if (newVal === selectedUser.pin) {
+              setTimeout(() => {
+                setCurrentUser(selectedUser.username);
+                onLoginSuccess(selectedUser);
+              }, 200);
+            } else {
+              setTimeout(() => {
+                setPinError(true);
+                setPinInput('');
+                setTimeout(() => setPinError(false), 500);
+              }, 200);
+            }
+          }
+        }
+      };
+
+      const handleKeypadBackspace = () => {
+        setPinInput(pinInput.slice(0, -1));
+      };
+
+      const openPinScreen = (user) => {
+        setSelectedUser(user);
+        setPinInput('');
+        setScreen('pin');
+      };
+
+      return (
+        <div className="app-container" style={{ minHeight: '100vh', justifyContent: 'center', backgroundColor: '#f8fafc' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px', padding: '0 20px' }}>
+            <div style={{ 
+              width: '64px', 
+              height: '64px', 
+              borderRadius: '20px', 
+              background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              margin: '0 auto 12px',
+              boxShadow: '0 8px 16px rgba(15, 118, 110, 0.2)'
+            }}>
+              <UnlockIcon size={32} color="#fff" />
+            </div>
+            <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--primary-dark)' }}>হিসাবের খাতা</h1>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginTop: '4px' }}>ডিভাইস ভিত্তিক নিরাপদ ডাবল-লক প্রোফাইল</p>
+          </div>
+
+          <div style={{ padding: '0 20px' }}>
+            {screen === 'list' && (
+              <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                <div style={{ backgroundColor: '#fff', borderRadius: '24px', padding: '24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <span style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-main)' }}>প্রোফাইল নির্বাচন করুন</span>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary" 
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '6px 12px', width: 'auto', height: 'auto', borderRadius: '10px' }}
+                      onClick={() => setScreen('register')}
+                    >
+                      <UserPlusIcon size={14} /> নতুন প্রোফাইল
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
+                    {users.map(user => {
+                      const dues = getUserDuesSum(user.username);
+                      const net = dues.receivablePending - dues.payablePending;
+                      return (
+                        <div 
+                          key={user.username}
+                          onClick={() => openPinScreen(user)}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-between',
+                            padding: '16px', 
+                            backgroundColor: '#f8fafc', 
+                            border: '1px solid var(--border)', 
+                            borderRadius: '16px', 
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            position: 'relative'
+                          }}
+                          className="profile-select-card"
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ 
+                              width: '44px', 
+                              height: '44px', 
+                              borderRadius: '12px', 
+                              backgroundColor: 'var(--primary-light)', 
+                              color: 'var(--primary)', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              fontWeight: 'bold',
+                              fontSize: '18px'
+                            }}>
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{user.name}</div>
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>@{user.username}</div>
+                            </div>
+                          </div>
+
+                          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>মোট পেন্ডিং হিসাব:</div>
+                            {net > 0 ? (
+                              <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--income-color)' }}>
+                                পাওনা: {formatBanglaCurrency(net)}
+                              </span>
+                            ) : net < 0 ? (
+                              <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--expense-color)' }}>
+                                দেনা: {formatBanglaCurrency(Math.abs(net))}
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>৳০.০০</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', gap: '8px', padding: '16px 24px', marginTop: '20px', borderRadius: '16px', backgroundColor: '#eff6ff', color: '#1e40af', fontSize: '12px' }}>
+                  <InfoIcon size={18} style={{ flexShrink: 0 }} />
+                  <div>
+                    <strong>অফলাইন ডাটা স্টোরেজ:</strong> এই প্রোফাইল ও হিসাবসমূহ সম্পূর্ণ অফলাইনে এই ব্রাউজারে সংরক্ষিত থাকে। কেউ আপনার পিন কোড ছাড়া আপনার হিসাবের ইতিহাস দেখতে পারবে না।
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {screen === 'pin' && selectedUser && (
+              <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                <div style={{ backgroundColor: '#fff', borderRadius: '24px', padding: '24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border)', textAlign: 'center' }}>
+                  <button 
+                    type="button" 
+                    className="icon-button" 
+                    style={{ position: 'absolute', top: '16px', left: '16px' }}
+                    onClick={() => setScreen('list')}
+                  >
+                    <ArrowLeftIcon size={20} />
+                  </button>
+
+                  <div style={{ 
+                    width: '50px', 
+                    height: '50px', 
+                    borderRadius: '50%', 
+                    backgroundColor: 'var(--primary-light)', 
+                    color: 'var(--primary)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    margin: '12px auto 8px',
+                    fontWeight: 'bold',
+                    fontSize: '20px'
+                  }}>
+                    {selectedUser.name.charAt(0).toUpperCase()}
+                  </div>
+                  <h2 style={{ fontSize: '18px', fontWeight: 'bold' }}>{selectedUser.name}</h2>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '24px' }}>৪ সংখ্যার পিন কোড দিয়ে আনলক করুন</p>
+
+                  <div 
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      gap: '16px', 
+                      marginBottom: '28px',
+                      animation: pinError ? 'shake 0.5s' : 'none'
+                    }}
+                  >
+                    {[0, 1, 2, 3].map(idx => (
+                      <div 
+                        key={idx} 
+                        style={{ 
+                          width: '16px', 
+                          height: '16px', 
+                          borderRadius: '50%', 
+                          border: '2px solid var(--primary)',
+                          backgroundColor: pinInput.length > idx ? 'var(--primary)' : 'transparent',
+                          transition: 'background-color 0.15s ease'
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {pinError && (
+                    <div style={{ color: 'var(--expense-color)', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '12px' }}>
+                      <AlertCircleIcon size={14} /> ভুল পিন কোড! আবার চেষ্টা করুন।
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', maxWidth: '280px', margin: '0 auto 10px' }}>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                      <button 
+                        key={num}
+                        type="button"
+                        onClick={() => handleKeypadPress(num.toString())}
+                        style={{ 
+                          height: '56px', 
+                          borderRadius: '16px', 
+                          border: '1px solid var(--border)', 
+                          backgroundColor: '#f8fafc',
+                          fontSize: '20px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontFamily: 'Inter, sans-serif'
+                        }}
+                        className="keypad-btn"
+                      >
+                        {toBanglaDigits(num)}
+                      </button>
+                    ))}
+                    
+                    <button 
+                      type="button" 
+                      onClick={() => setScreen('list')}
+                      style={{ 
+                        borderRadius: '16px', 
+                        border: 'none', 
+                        backgroundColor: 'transparent',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      বাতিল
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={() => handleKeypadPress('0')}
+                      style={{ 
+                        height: '56px', 
+                        borderRadius: '16px', 
+                        border: '1px solid var(--border)', 
+                        backgroundColor: '#f8fafc',
+                        fontSize: '20px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontFamily: 'Inter, sans-serif'
+                      }}
+                      className="keypad-btn"
+                    >
+                      {toBanglaDigits(0)}
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={handleKeypadBackspace}
+                      style={{ 
+                        height: '56px', 
+                        borderRadius: '16px', 
+                        border: '1px solid var(--border)', 
+                        backgroundColor: '#f8fafc',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      className="keypad-btn"
+                    >
+                      মুছুন
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {screen === 'register' && (
+              <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                <div style={{ backgroundColor: '#fff', borderRadius: '24px', padding: '24px', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border)' }}>
+                  {users.length > 0 && (
+                    <button 
+                      type="button" 
+                      className="icon-button" 
+                      style={{ marginBottom: '16px' }}
+                      onClick={() => setScreen('list')}
+                    >
+                      <ArrowLeftIcon size={20} />
+                    </button>
+                  )}
+
+                  <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '4px' }}>নতুন প্রোফাইল তৈরি করুন</h2>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>আপনার হিসাব সম্পূর্ণ সুরক্ষিত ও আলাদা রাখতে প্রোফাইল খুলুন।</p>
+
+                  {errorMsg && (
+                    <div style={{ color: 'var(--expense-color)', backgroundColor: 'var(--expense-bg)', padding: '10px 12px', borderRadius: '12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                      <AlertCircleIcon size={16} style={{ flexShrink: 0 }} /> {errorMsg}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleRegisterSubmit}>
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="reg-name">আপনার নাম *</label>
+                      <div className="input-container">
+                        <input
+                          id="reg-name"
+                          type="text"
+                          className="form-input"
+                          placeholder="যেমন: আব্দুর রহমান, রবিন"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="reg-username">ইউজারনেম (ইংরেজি অক্ষর ও সংখ্যা) *</label>
+                      <div className="input-container">
+                        <input
+                          id="reg-username"
+                          type="text"
+                          className="form-input"
+                          placeholder="যেমন: rahman12"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label" htmlFor="reg-pin">পিন কোড (৪ সংখ্যা) *</label>
+                        <input
+                          id="reg-pin"
+                          type="password"
+                          maxLength="4"
+                          pattern="[0-9]*"
+                          inputMode="numeric"
+                          className="form-input"
+                          placeholder="••••"
+                          value={pin}
+                          onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
+                          style={{ letterSpacing: '8px', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" htmlFor="reg-confirm-pin">পিন কনফার্ম করুন *</label>
+                        <input
+                          id="reg-confirm-pin"
+                          type="password"
+                          maxLength="4"
+                          pattern="[0-9]*"
+                          inputMode="numeric"
+                          className="form-input"
+                          placeholder="••••"
+                          value={confirmPin}
+                          onChange={(e) => setConfirmPin(e.target.value.replace(/[^0-9]/g, ''))}
+                          style={{ letterSpacing: '8px', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-actions" style={{ marginTop: '24px' }}>
+                      {users.length > 0 && (
+                        <button type="button" className="btn btn-secondary" onClick={() => setScreen('list')}>
+                          বাতিল
+                        </button>
+                      )}
+                      <button type="submit" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <KeyIcon size={18} /> প্রোফাইল তৈরি করুন
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // COMPONENTS IMPLEMENTATIONS
+    // ==========================================
+
+    // 1. CALCULATOR MODAL (POPUP ON AMOUNT FIELD)
+    function CalculatorModal({ isOpen, onClose, onSelectAmount }) {
+      const [display, setDisplay] = useState('0');
+      const [formula, setFormula] = useState('');
+      const [isDone, setIsDone] = useState(false);
+
+      if (!isOpen) return null;
+
+      const handleDigit = (digit) => {
+        if (isDone) {
+          setDisplay(digit);
+          setFormula('');
+          setIsDone(false);
+          return;
+        }
+        if (display === '0') setDisplay(digit);
+        else setDisplay(display + digit);
+      };
+
+      const handleDecimal = () => {
+        if (isDone) {
+          setDisplay('0.');
+          setFormula('');
+          setIsDone(false);
+          return;
+        }
+        const parts = display.split(/[+\-*/]/);
+        const lastPart = parts[parts.length - 1];
+        if (!lastPart.includes('.')) setDisplay(display + '.');
+      };
+
+      const handleOperator = (op) => {
+        setIsDone(false);
+        const lastChar = display[display.length - 1];
+        if (['+', '-', '*', '/'].includes(lastChar)) {
+          setDisplay(display.slice(0, -1) + op);
+        } else {
+          setDisplay(display + op);
+        }
+      };
+
+      const handlePercent = () => {
+        const parts = display.split(/[+\-*/]/);
+        const lastPart = parts[parts.length - 1];
+        if (!lastPart || lastPart === '0') return;
+        const value = parseFloat(lastPart) / 100;
+        const beforePart = display.slice(0, display.length - lastPart.length);
+        setDisplay(beforePart + value.toString());
+      };
+
+      const handleClear = () => {
+        setDisplay('0');
+        setFormula('');
+        setIsDone(false);
+      };
+
+      const handleBackspace = () => {
+        if (isDone) { handleClear(); return; }
+        if (display.length > 1) setDisplay(display.slice(0, -1));
+        else setDisplay('0');
+      };
+
+      const handleCalculate = () => {
+        if (isDone) return;
+        let expr = display;
+        const lastChar = expr[expr.length - 1];
+        if (['+', '-', '*', '/'].includes(lastChar)) expr = expr.slice(0, -1);
+
+        try {
+          const result = evaluateExpression(expr);
+          const roundedResult = Math.round(result * 10000) / 10000;
+          setFormula(expr + '=');
+          setDisplay(roundedResult.toString());
+          setIsDone(true);
+        } catch {
+          setDisplay('Error');
+          setIsDone(true);
+        }
+      };
+
+      const evaluateExpression = (expr) => {
+        const tokens = [];
+        let numberBuffer = '';
+        for (let i = 0; i < expr.length; i++) {
+          const char = expr[i];
+          if (/[0-9.]/.test(char)) numberBuffer += char;
+          else if (['+', '-', '*', '/'].includes(char)) {
+            if (numberBuffer) { tokens.push(parseFloat(numberBuffer)); numberBuffer = ''; }
+            tokens.push(char);
+          }
+        }
+        if (numberBuffer) tokens.push(parseFloat(numberBuffer));
+        if (tokens.length === 0) return 0;
+
+        const firstPass = [];
+        let i = 0;
+        while (i < tokens.length) {
+          const token = tokens[i];
+          if (token === '*' || token === '/') {
+            const prev = firstPass.pop();
+            const next = tokens[i + 1];
+            if (prev === undefined || next === undefined) throw new Error();
+            const val = token === '*' ? prev * next : prev / next;
+            firstPass.push(val);
+            i += 2;
+          } else {
+            firstPass.push(token);
+            i++;
+          }
+        }
+
+        let result = firstPass[0];
+        let j = 1;
+        while (j < firstPass.length) {
+          const op = firstPass[j];
+          const val = firstPass[j + 1];
+          if (op === '+') result += val;
+          else if (op === '-') result -= val;
+          j += 2;
+        }
+        return result;
+      };
+
+      const handleApply = () => {
+        let finalVal = display;
+        if (/[+\-*/]/.test(display) && !isDone) {
+          let expr = display;
+          const lastChar = expr[expr.length - 1];
+          if (['+', '-', '*', '/'].includes(lastChar)) expr = expr.slice(0, -1);
+          try {
+            const res = evaluateExpression(expr);
+            finalVal = (Math.round(res * 100) / 100).toString();
+          } catch {
+            finalVal = '0';
+          }
+        }
+        const numericVal = parseFloat(finalVal);
+        onSelectAmount(isNaN(numericVal) ? 0 : numericVal);
+        onClose();
+      };
+
+      return (
+        <div className="modal-overlay" style={{ alignItems: 'center' }} onClick={onClose}>
+          <div className="modal-content" style={{ width: '90%', maxWidth: '360px', borderRadius: '24px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title">ক্যালকুলেটর</div>
+              <button type="button" className="icon-button" onClick={onClose}><XIcon size={20} /></button>
+            </div>
+            <div>
+              <div className="calc-display">
+                {formula && <div className="calc-formula">{toBanglaDigits(formula)}</div>}
+                <div>{toBanglaDigits(display)}</div>
+              </div>
+              <div className="calculator-grid">
+                <button type="button" className="calc-btn op" onClick={handleClear}>C</button>
+                <button type="button" className="calc-btn op" onClick={handleBackspace}><BackspaceIcon size={20}/></button>
+                <button type="button" className="calc-btn op" onClick={handlePercent}>%</button>
+                <button type="button" className="calc-btn op" onClick={() => handleOperator('/')}>÷</button>
+                <button type="button" className="calc-btn" onClick={() => handleDigit('7')}>7</button>
+                <button type="button" className="calc-btn" onClick={() => handleDigit('8')}>8</button>
+                <button type="button" className="calc-btn" onClick={() => handleDigit('9')}>9</button>
+                <button type="button" className="calc-btn op" onClick={() => handleOperator('*')}>×</button>
+                <button type="button" className="calc-btn" onClick={() => handleDigit('4')}>4</button>
+                <button type="button" className="calc-btn" onClick={() => handleDigit('5')}>5</button>
+                <button type="button" className="calc-btn" onClick={() => handleDigit('6')}>6</button>
+                <button type="button" className="calc-btn op" onClick={() => handleOperator('-')}>-</button>
+                <button type="button" className="calc-btn" onClick={() => handleDigit('1')}>1</button>
+                <button type="button" className="calc-btn" onClick={() => handleDigit('2')}>2</button>
+                <button type="button" className="calc-btn" onClick={() => handleDigit('3')}>3</button>
+                <button type="button" className="calc-btn op" onClick={() => handleOperator('+')}>+</button>
+                <button type="button" className="calc-btn" style={{ gridColumn: 'span 2' }} onClick={() => handleDigit('0')}>0</button>
+                <button type="button" className="calc-btn" onClick={handleDecimal}>.</button>
+                <button type="button" className="calc-btn eq" onClick={handleCalculate}>=</button>
+              </div>
+              <div style={{ marginTop: '20px' }}>
+                <button type="button" className="btn btn-primary" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={handleApply}>
+                  <CheckIcon size={18} /> হিসাবে যোগ করুন
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 2. TRANSACTION ENTRY AND MODIFICATION FORM
+    function TransactionForm({ isOpen, onClose, onSave, transactionToEdit, categories, nextSerial }) {
+      const [description, setDescription] = useState('');
+      const [personName, setPersonName] = useState('');
+      const [amount, setAmount] = useState('');
+      const [categoryType, setCategoryType] = useState('expense');
+      
+      const [status, setStatus] = useState('paid');
+      const [paidAmountInput, setPaidAmountInput] = useState('');
+      
+      const [date, setDate] = useState('');
+      const [time, setTime] = useState('');
+      const [note, setNote] = useState('');
+      const [isCalcOpen, setIsCalcOpen] = useState(false);
+
+      useEffect(() => {
+        if (!transactionToEdit) {
+          if (categoryType === 'expense') setStatus('paid');
+          else setStatus('pending');
+        }
+      }, [categoryType, transactionToEdit]);
+
+      useEffect(() => {
+        if (isOpen) {
+          if (transactionToEdit) {
+            setDescription(transactionToEdit.description || '');
+            setPersonName(transactionToEdit.personName || '');
+            setAmount(transactionToEdit.amount ? transactionToEdit.amount.toString() : '');
+            setCategoryType(transactionToEdit.categoryType || 'expense');
+            setStatus(transactionToEdit.status || 'paid');
+            setPaidAmountInput(transactionToEdit.paidAmount ? transactionToEdit.paidAmount.toString() : '');
+            setDate(transactionToEdit.date || '');
+            setTime(transactionToEdit.time || '');
+            setNote(transactionToEdit.note || '');
+          } else {
+            setDescription('');
+            setPersonName('');
+            setAmount('');
+            setCategoryType('expense');
+            setStatus('paid');
+            setPaidAmountInput('');
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            setDate(`${yyyy}-${mm}-${dd}`);
+            const hh = String(today.getHours()).padStart(2, '0');
+            const min = String(today.getMinutes()).padStart(2, '0');
+            setTime(`${hh}:${min}`);
+            setNote('');
+          }
+        }
+      }, [isOpen, transactionToEdit]);
+
+      if (!isOpen) return null;
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!description.trim()) { alert('অনুগ্রহ করে বিবরণ লিখুন!'); return; }
+        
+        if (categoryType !== 'expense' && !personName.trim()) {
+          alert('অনুগ্রহ করে ব্যক্তির নাম লিখুন!');
+          return;
+        }
+
+        const numericAmount = parseBanglaFloat(amount);
+        if (isNaN(numericAmount) || numericAmount <= 0) { alert('অনুগ্রহ করে সঠিক টাকার পরিমাণ লিখুন!'); return; }
+
+        let finalPaid = 0;
+        if (status === 'paid') {
+          finalPaid = numericAmount;
+        } else if (status === 'partial') {
+          const parsedPaid = parseBanglaFloat(paidAmountInput);
+          if (isNaN(parsedPaid) || parsedPaid <= 0) { alert('সঠিক পরিশোধিত টাকার পরিমাণ লিখুন!'); return; }
+          if (parsedPaid >= numericAmount) { alert('পরিশোধিত টাকা মোট টাকার চেয়ে কম হতে হবে!'); return; }
+          finalPaid = parsedPaid;
+        } else {
+          finalPaid = 0;
+        }
+
+        onSave({
+          id: transactionToEdit && transactionToEdit.id && !transactionToEdit.id.startsWith('prefill-') ? transactionToEdit.id : 'tx-' + Date.now(),
+          serial: transactionToEdit && transactionToEdit.serial ? transactionToEdit.serial : nextSerial,
+          description: description.trim(),
+          personName: personName.trim(),
+          amount: numericAmount,
+          categoryType,
+          status,
+          paidAmount: finalPaid,
+          pendingAmount: numericAmount - finalPaid,
+          date,
+          time,
+          note: note.trim()
+        });
+        onClose();
+      };
+
+      return (
+        <>
+          <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <div className="modal-title">
+                  {transactionToEdit && transactionToEdit.id && !transactionToEdit.id.startsWith('prefill-') ? 'হিসাব সংশোধন' : 'নতুন হিসাব লিখুন'}
+                  <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '10px', fontWeight: 'normal' }}>
+                    (ক্রমিক: {padSerial(transactionToEdit && transactionToEdit.serial ? transactionToEdit.serial : nextSerial)})
+                  </span>
+                </div>
+                <button type="button" className="icon-button" onClick={onClose}><XIcon size={22} /></button>
+              </div>
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label className="form-label">বিবরণ *</label>
+                  <input type="text" className="form-input" placeholder="যেমন: বাজার খরচ, বন্ধুদের সাথে খাওয়া" value={description} onChange={(e) => setDescription(e.target.value)} required />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">{
+                    categoryType === 'borrowed' ? 'কার কাছ থেকে ধার নিয়েছেন? (ব্যক্তির নাম) *' :
+                    categoryType === 'receivable' ? 'কার কাছ থেকে টাকা পাবেন? (ব্যক্তির নাম) *' :
+                    categoryType === 'owed' ? 'কে বাকি টাকা পাবে? (ব্যক্তির নাম/দোকান) *' :
+                    'দোকান বা প্রতিষ্ঠানের নাম (ঐচ্ছিক)'
+                  }</label>
+                  <input type="text" className="form-input" placeholder={
+                    categoryType === 'borrowed' ? 'যেমন: করিম, রহিম' :
+                    categoryType === 'receivable' ? 'যেমন: রফিক, জামিল' :
+                    categoryType === 'owed' ? 'যেমন: আব্দুর রহমান, আব্দুল স্টোর' :
+                    'যেমন: স্বপ্ন সুপার শপ'
+                  } value={personName} onChange={e=>setPersonName(e.target.value)} required={categoryType !== 'expense'} />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">মোট টাকার পরিমাণ *</label>
+                    <div className="input-container">
+                      <input type="text" className="form-input input-with-action" placeholder="৳ ০.০০" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+                      <button type="button" className="input-action-btn" onClick={() => setIsCalcOpen(true)}><CalculatorIcon size={18}/></button>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">হিসাবের ধরন *</label>
+                    <select className="form-select" value={categoryType} onChange={(e) => setCategoryType(e.target.value)}>
+                      <option value="borrowed">{categories.borrowed}</option>
+                      <option value="receivable">{categories.receivable}</option>
+                      <option value="expense">{categories.expense}</option>
+                      <option value="owed">{categories.owed}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">পরিশোধের অবস্থা *</label>
+                    <select className="form-select" value={status} onChange={(e) => setStatus(e.target.value)}>
+                      <option value="pending">পরিশোধ করা হয়নি (বাকি)</option>
+                      <option value="partial">আংশিক পরিশোধিত</option>
+                      <option value="paid">সম্পূর্ণ পরিশোধিত</option>
+                    </select>
+                  </div>
+                  {status === 'partial' ? (
+                    <div className="form-group">
+                      <label className="form-label">পরিশোধিত টাকা *</label>
+                      <input type="text" className="form-input" placeholder="৳ ০.০০" value={paidAmountInput} onChange={(e) => setPaidAmountInput(e.target.value)} required />
+                    </div>
+                  ) : (
+                    <div className="form-group">
+                      <label className="form-label">অবশিষ্ট বকেয়া</label>
+                      <div className="form-input" style={{ backgroundColor: '#e2e8f0', color: 'var(--text-muted)', fontWeight: 'bold' }}>
+                        {status === 'paid' ? '৳০.০০' : `৳${amount || '০.০০'}`}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">তারিখ *</label>
+                    <input type="date" className="form-input" value={date} onChange={(e) => setDate(e.target.value)} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">সময় *</label>
+                    <input type="time" className="form-input" value={time} onChange={(e) => setTime(e.target.value)} required />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">বিশেষ নোট (ঐচ্ছিক)</label>
+                  <textarea className="form-textarea" rows="2" placeholder="অন্যান্য তথ্য..." value={note} onChange={(e) => setNote(e.target.value)} />
+                </div>
+                <div className="form-actions">
+                  <button type="button" className="btn btn-secondary" onClick={onClose}>বাতিল</button>
+                  <button type="submit" className="btn btn-primary">{transactionToEdit && transactionToEdit.id && !transactionToEdit.id.startsWith('prefill-') ? 'পরিবর্তন সংরক্ষণ করুন' : 'হিসাব যুক্ত করুন'}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <CalculatorModal isOpen={isCalcOpen} onClose={() => setIsCalcOpen(false)} onSelectAmount={(val) => setAmount(val.toString())} />
+        </>
+      );
+    }
+
+    // 3. DASHBOARD PAGE
+    function Dashboard({ transactions, categories, onAddClick, onViewSubTab }) {
+      const getTotals = () => {
+        let iOwe = 0; let theyOwe = 0; let totalPaid = 0; let totalPending = 0; let totalPartial = 0;
+        let todayPaid = 0; let monthPaid = 0;
+        const todayStr = new Date().toISOString().split('T')[0];
+        const currentMonthStr = todayStr.substring(0, 7);
+
+        transactions.forEach(tx => {
+          const paid = tx.paidAmount || 0;
+          const pending = tx.pendingAmount || 0;
+          const type = tx.categoryType;
+          const status = tx.status || 'paid';
+
+          if (type === 'borrowed' || type === 'owed') iOwe += pending;
+          if (type === 'receivable') theyOwe += pending;
+
+          totalPaid += paid;
+          totalPending += pending;
+
+          if (status === 'partial') totalPartial += pending;
+          if (tx.date === todayStr) todayPaid += paid;
+          if (tx.date.startsWith(currentMonthStr)) monthPaid += paid;
+        });
+        return { iOwe, theyOwe, totalPaid, totalPending, totalPartial, todayPaid, monthPaid };
+      };
+
+      const totals = getTotals();
+
+      const getCategoryStats = (type) => {
+        const filtered = transactions.filter(t => t.categoryType === type);
+        const count = filtered.length;
+        const total = filtered.reduce((sum, t) => sum + t.amount, 0);
+        const sorted = [...filtered].sort((a, b) => {
+          const dateA = a.date + 'T' + (a.time || '00:00');
+          const dateB = b.date + 'T' + (b.time || '00:00');
+          return dateB.localeCompare(dateA);
+        });
+        const latest = sorted[0] ? `${sorted[0].description} (${formatBanglaCurrency(sorted[0].amount)})` : 'কোন হিসাব নেই';
+        return { count, total, latest };
+      };
+
+      const recentTransactions = [...transactions]
+        .sort((a, b) => (b.date + 'T' + (b.time || '00:00')).localeCompare(a.date + 'T' + (a.time || '00:00')))
+        .slice(0, 4)
+        .sort((a, b) => {
+          const nameA = (a.personName || '').trim().toLowerCase();
+          const nameB = (b.personName || '').trim().toLowerCase();
+          if (nameA && !nameB) return -1;
+          if (!nameA && nameB) return 1;
+          return nameA.localeCompare(nameB, 'bn');
+        });
+
+      const renderStatusBadge = (tx) => {
+        if (tx.status === 'paid') return <span className="tx-category-tag" style={{ backgroundColor: 'var(--income-bg)', color: 'var(--income-color)' }}>পরিশোধিত</span>;
+        if (tx.status === 'partial') return <span className="tx-category-tag" style={{ backgroundColor: 'var(--due-bg)', color: 'var(--due-color)' }}>আংশিক (বাকি: {formatBanglaCurrency(tx.pendingAmount)})</span>;
+        return <span className="tx-category-tag" style={{ backgroundColor: 'var(--expense-bg)', color: 'var(--expense-color)' }}>বাকি (অপরিশোধিত)</span>;
+      };
+
+      return (
+        <div className="content-area">
+          <div className="summary-container">
+            <div 
+              className="summary-card full-width" 
+              style={{ background: 'linear-gradient(135deg, #0f766e, #115e59)', cursor: 'pointer' }}
+              onClick={() => onViewSubTab('all_pending')}
+              title="বাকি থাকা সকল হিসাব দেখতে ক্লিক করুন"
+            >
+              <div>
+                <div className="summary-label" style={{ display:'flex', alignItems:'center', gap:'6px' }}>মোট বকেয়া / অপরিশোধিত</div>
+                <div className="summary-value">{formatBanglaCurrency(totals.totalPending)}</div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '12px', opacity: 0.95, borderTop:'1px solid rgba(255,255,255,0.2)', paddingTop:'8px' }}>
+                <span>আমার দেনা: <strong>{formatBanglaCurrency(totals.iOwe)}</strong></span>
+                <span>আমার পাওনা: <strong>{formatBanglaCurrency(totals.theyOwe)}</strong></span>
+              </div>
+            </div>
+            
+            <div 
+              className="summary-card" 
+              style={{ borderLeft: '4px solid var(--expense-color)', cursor: 'pointer' }}
+              onClick={() => onViewSubTab('i_owe')}
+              title="দেনার তালিকা দেখতে ক্লিক করুন"
+            >
+              <div className="summary-label">আমি পাবো না / আমার দেনা</div>
+              <div className="summary-value" style={{ color: 'var(--expense-color)' }}>{formatBanglaCurrency(totals.iOwe)}</div>
+            </div>
+            <div 
+              className="summary-card" 
+              style={{ borderLeft: '4px solid var(--income-color)', cursor: 'pointer' }}
+              onClick={() => onViewSubTab('they_owe')}
+              title="পাওনার তালিকা দেখতে ক্লিক করুন"
+            >
+              <div className="summary-label">আমার পাওনা (আমি পাবো)</div>
+              <div className="summary-value" style={{ color: 'var(--income-color)' }}>{formatBanglaCurrency(totals.theyOwe)}</div>
+            </div>
+            <div 
+              className="summary-card" 
+              style={{ borderLeft: '4px solid #10b981', cursor: 'pointer' }}
+              onClick={() => onViewSubTab('settled')}
+              title="সম্পন্ন লেনদেন দেখতে ক্লিক করুন"
+            >
+              <div className="summary-label">মোট পরিশোধিত</div>
+              <div className="summary-value" style={{ color: '#10b981' }}>{formatBanglaCurrency(totals.totalPaid)}</div>
+            </div>
+            <div 
+              className="summary-card" 
+              style={{ borderLeft: '4px solid var(--due-color)', cursor: 'pointer' }}
+              onClick={() => onViewSubTab('all_partial')}
+              title="আংশিক পরিশোধিত হিসাব দেখতে ক্লিক করুন"
+            >
+              <div className="summary-label">আংশিক পরিশোধিত</div>
+              <div className="summary-value" style={{ color: 'var(--due-color)' }}>{formatBanglaCurrency(totals.totalPartial)}</div>
+            </div>
+            <div className="summary-card">
+              <div className="summary-label">আজকের জমা/পরিশোধ</div>
+              <div className="summary-value" style={{ fontSize:'18px', color:'var(--primary)' }}>{formatBanglaCurrency(totals.todayPaid)}</div>
+            </div>
+            <div className="summary-card">
+              <div className="summary-label">এই মাসের মোট পরিশোধ</div>
+              <div className="summary-value" style={{ fontSize:'18px', color:'var(--primary)' }}>{formatBanglaCurrency(totals.monthPaid)}</div>
+            </div>
+          </div>
+
+          <h2 className="section-title">ক্যাটাগরি ভিত্তিক হিসাব</h2>
+          <div className="categories-grid">
+            {['borrowed', 'receivable', 'expense', 'owed'].map(key => {
+              const stats = getCategoryStats(key);
+              let color = 'var(--primary)'; let bgClass = 'owed'; let Icon = HelpCircleIcon;
+              if (key === 'borrowed') { color = 'var(--expense-color)'; bgClass = 'expense'; Icon = ArrowDownRight; }
+              else if (key === 'receivable') { color = 'var(--income-color)'; bgClass = 'income'; Icon = ArrowUpRight; }
+              else if (key === 'expense') { color = '#3b82f6'; bgClass = 'expense-blue'; Icon = WalletIcon; }
+              else if (key === 'owed') { color = 'var(--due-color)'; bgClass = 'due'; Icon = ClockIcon; }
+
+              return (
+                <div className={`category-card ${bgClass}`} key={key} style={{ borderLeftColor: color }}>
+                  <div className="category-header">
+                    <div className="category-info">
+                      <Icon color={color} size={22} />
+                      <span className="category-title">{categories[key]}</span>
+                    </div>
+                    <div className="category-stats">{toBanglaDigits(stats.count)} টি হিসাব</div>
+                  </div>
+                  <div className="category-body">
+                    <div className="category-amount" style={{ color: color }}>{formatBanglaCurrency(stats.total)}</div>
+                  </div>
+                  <div className="category-footer">
+                    <span>সর্বশেষ: {stats.latest}</span>
+                    <button type="button" className="btn-view-all" onClick={() => onViewSubTab(key)}>সব দেখুন <ArrowRight size={14}/></button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'24px', marginBottom:'12px' }}>
+            <h2 className="section-title" style={{ margin: 0 }}>সাম্প্রতিক হিসাব</h2>
+            <button type="button" className="btn-view-all" onClick={() => onViewSubTab('all')}>সব দেখুন <ArrowRight size={14}/></button>
+          </div>
+          <div className="transaction-list">
+            {recentTransactions.length === 0 ? (
+              <div style={{ textAlign:'center', color:'var(--text-muted)', padding:'20px', backgroundColor:'var(--bg-card)', borderRadius:'16px', border:'1px dashed var(--border)' }}>কোন হিসাব নেই</div>
+            ) : (
+              recentTransactions.map(tx => (
+                <div className="transaction-card" key={tx.id} style={{ opacity: tx.status === 'paid' ? 0.85 : 1 }}>
+                  <div className="transaction-meta">
+                    <div className="tx-header">
+                      <span className="tx-serial">{padSerial(tx.serial)}</span>
+                      <span className="tx-description" style={{ textDecoration: tx.status === 'paid' ? 'line-through' : 'none' }}>{tx.description}</span>
+                    </div>
+                    <div className="tx-details">
+                      {formatBanglaDate(tx.date)} • {formatBanglaTime(tx.time)}
+                      {tx.personName && ` • 👤 ${tx.personName}`}
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
+                      <span className="tx-category-tag">{categories[tx.categoryType]}</span>
+                      {renderStatusBadge(tx)}
+                    </div>
+                  </div>
+                  <div className="transaction-right">
+                    <div className="tx-amount" style={{ color: tx.status === 'paid' ? '#10b981' : 'var(--text-main)' }}>
+                      {formatBanglaCurrency(tx.amount)}
+                    </div>
+                    {tx.status === 'paid' && <CheckCircleIcon size={16} color="#10b981" style={{ marginTop: '4px' }} />}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <button type="button" className="fab" onClick={onAddClick}><PlusIcon size={20}/> হিসাব লিখুন</button>
+        </div>
+      );
+    }
+
+    // 4. TRANSACTION HISTORY & SEARCH PAGE
+    function TransactionHistory({ 
+      transactions, 
+      categories, 
+      onEdit, 
+      onDelete, 
+      onUpdate, 
+      initialSubTab, 
+      initialStatusFilter, 
+      initialCategoryFilter 
+    }) {
+      const [searchTerm, setSearchTerm] = useState('');
+      const [activeSubTab, setActiveSubTab] = useState('all');
+      const [activeCategoryFilter, setActiveCategoryFilter] = useState('all');
+      const [activeStatusFilter, setActiveStatusFilter] = useState('all');
+      const [startDate, setStartDate] = useState('');
+      const [endDate, setEndDate] = useState('');
+      
+      const [deleteTargetId, setDeleteTargetId] = useState(null);
+      const [quickPayTx, setQuickPayTx] = useState(null);
+      const [quickPayMode, setQuickPayMode] = useState('full');
+      const [quickPaidAmount, setQuickPaidAmount] = useState('');
+      const [expandedPerson, setExpandedPerson] = useState(null);
+
+      useEffect(() => {
+        if (initialSubTab) setActiveSubTab(initialSubTab);
+        else setActiveSubTab('all');
+
+        if (initialStatusFilter) setActiveStatusFilter(initialStatusFilter);
+        else setActiveStatusFilter('all');
+
+        if (initialCategoryFilter) setActiveCategoryFilter(initialCategoryFilter);
+        else setActiveCategoryFilter('all');
+      }, [initialSubTab, initialStatusFilter, initialCategoryFilter]);
+
+      const filteredList = transactions.filter(tx => {
+        // Sub-Tab segmentation
+        if (activeSubTab === 'i_owe') {
+          const isOweType = tx.categoryType === 'borrowed' || tx.categoryType === 'owed';
+          const isUnsettled = tx.status !== 'paid';
+          if (!isOweType || !isUnsettled) return false;
+        } else if (activeSubTab === 'they_owe') {
+          const isReceivableType = tx.categoryType === 'receivable';
+          const isUnsettled = tx.status !== 'paid';
+          if (!isReceivableType || !isUnsettled) return false;
+        } else if (activeSubTab === 'expense') {
+          if (tx.categoryType !== 'expense') return false;
+        } else if (activeSubTab === 'settled') {
+          if (tx.status !== 'paid') return false;
+        }
+
+        if (activeCategoryFilter !== 'all' && tx.categoryType !== activeCategoryFilter) return false;
+        if (activeStatusFilter !== 'all' && tx.status !== activeStatusFilter) return false;
+        
+        if (searchTerm.trim()) {
+          const query = searchTerm.toLowerCase();
+          const descMatch = tx.description.toLowerCase().includes(query);
+          const personMatch = tx.personName ? tx.personName.toLowerCase().includes(query) : false;
+          const amtMatch = tx.amount.toString().includes(query) || formatBanglaCurrency(tx.amount).includes(query);
+          const catMatch = (categories[tx.categoryType] || '').toLowerCase().includes(query);
+          const dateMatch = tx.date.includes(query) || formatBanglaDate(tx.date).toLowerCase().includes(query);
+          if (!descMatch && !personMatch && !amtMatch && !catMatch && !dateMatch) return false;
+        }
+        if (startDate && tx.date < startDate) return false;
+        if (endDate && tx.date > endDate) return false;
+        return true;
+      }).sort((a, b) => {
+        const nameA = (a.personName || '').trim().toLowerCase();
+        const nameB = (b.personName || '').trim().toLowerCase();
+        if (nameA && !nameB) return -1;
+        if (!nameA && nameB) return 1;
+        if (nameA && nameB) {
+          const nameCompare = nameA.localeCompare(nameB, 'bn');
+          if (nameCompare !== 0) return nameCompare;
+        }
+        const dateA = a.date + 'T' + (a.time || '00:00');
+        const dateB = b.date + 'T' + (b.time || '00:00');
+        return dateB.localeCompare(dateA);
+      });
+
+      const getGroupedPersons = () => {
+        const groups = {};
+
+        transactions.forEach(tx => {
+          if (!tx.personName || !tx.personName.trim()) return;
+          const name = tx.personName.trim();
+          const nameKey = name.toLowerCase();
+
+          if (!groups[nameKey]) {
+            groups[nameKey] = {
+              name: name,
+              receivablePending: 0,
+              payablePending: 0,
+              totalTransactions: 0
+            };
+          }
+
+          groups[nameKey].totalTransactions += 1;
+          
+          const pending = tx.pendingAmount || 0;
+          if (tx.categoryType === 'receivable') {
+            groups[nameKey].receivablePending += pending;
+          } else if (tx.categoryType === 'borrowed' || tx.categoryType === 'owed') {
+            groups[nameKey].payablePending += pending;
+          }
+        });
+
+        return Object.values(groups)
+          .filter(p => {
+            const hasDues = p.receivablePending > 0 || p.payablePending > 0;
+            if (!hasDues) return false;
+            
+            if (searchTerm.trim()) {
+              return p.name.toLowerCase().includes(searchTerm.toLowerCase());
+            }
+            return true;
+          })
+          .sort((a, b) => {
+            const totalA = a.receivablePending + a.payablePending;
+            const totalB = b.receivablePending + b.payablePending;
+            return totalB - totalA;
+          });
+      };
+
+      const personLedgerList = getGroupedPersons();
+
+      const renderStatusBadge = (tx) => {
+        if (tx.status === 'paid') return <span className="tx-category-tag" style={{ backgroundColor: 'var(--income-bg)', color: 'var(--income-color)' }}>পরিশোধিত</span>;
+        if (tx.status === 'partial') return <span className="tx-category-tag" style={{ backgroundColor: 'var(--due-bg)', color: 'var(--due-color)' }}>আংশিক (বাকি: {formatBanglaCurrency(tx.pendingAmount)})</span>;
+        return <span className="tx-category-tag" style={{ backgroundColor: 'var(--expense-bg)', color: 'var(--expense-color)' }}>বাকি (অপরিশোধিত)</span>;
+      };
+
+      const handleConfirmDelete = () => {
+        if (deleteTargetId) {
+          onDelete(deleteTargetId);
+          setDeleteTargetId(null);
+        }
+      };
+
+      const openQuickPay = (tx) => {
+        setQuickPayTx(tx);
+        setQuickPayMode('full');
+        setQuickPaidAmount(tx.pendingAmount ? tx.pendingAmount.toString() : '');
+      };
+
+      const handleQuickPaySubmit = (e) => {
+        e.preventDefault();
+        if (!quickPayTx) return;
+
+        let updatedTx = { ...quickPayTx };
+        if (quickPayMode === 'full') {
+          updatedTx.status = 'paid';
+          updatedTx.paidAmount = quickPayTx.amount;
+          updatedTx.pendingAmount = 0;
+        } else {
+          const additionalPaid = parseBanglaFloat(quickPaidAmount);
+          if (isNaN(additionalPaid) || additionalPaid <= 0) { alert('সঠিক টাকা লিখুন!'); return; }
+          const totalPaid = (quickPayTx.paidAmount || 0) + additionalPaid;
+          if (totalPaid > quickPayTx.amount) { alert('পরিশোধ মোট হিসাবের চেয়ে বেশি হতে পারে না!'); return; }
+          
+          updatedTx.paidAmount = totalPaid;
+          updatedTx.pendingAmount = quickPayTx.amount - totalPaid;
+          updatedTx.status = updatedTx.pendingAmount === 0 ? 'paid' : 'partial';
+        }
+
+        onUpdate(updatedTx);
+        setQuickPayTx(null);
+        alert('সফলভাবে পরিশোধ তথ্য আপডেট করা হয়েছে!');
+      };
+
+      return (
+        <div className="content-area">
+          {/* Horizontal Sub Tabs */}
+          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+            <button
+              type="button"
+              className={`filter-chip ${activeSubTab === 'i_owe' ? 'active' : ''}`}
+              style={{ borderRadius: '10px', padding: '8px 16px', flex: '1 0 auto', textAlign: 'center' }}
+              onClick={() => {
+                setActiveSubTab('i_owe');
+                setActiveCategoryFilter('all');
+                setActiveStatusFilter('all');
+              }}
+            >
+              আমার দেনা (আমি দেবো)
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${activeSubTab === 'they_owe' ? 'active' : ''}`}
+              style={{ borderRadius: '10px', padding: '8px 16px', flex: '1 0 auto', textAlign: 'center' }}
+              onClick={() => {
+                setActiveSubTab('they_owe');
+                setActiveCategoryFilter('all');
+                setActiveStatusFilter('all');
+              }}
+            >
+              আমার পাওনা (অন্যরা দেবে)
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${activeSubTab === 'expense' ? 'active' : ''}`}
+              style={{ borderRadius: '10px', padding: '8px 16px', flex: '1 0 auto', textAlign: 'center' }}
+              onClick={() => {
+                setActiveSubTab('expense');
+                setActiveCategoryFilter('all');
+                setActiveStatusFilter('all');
+              }}
+            >
+              ক্রয় / খরচ
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${activeSubTab === 'settled' ? 'active' : ''}`}
+              style={{ borderRadius: '10px', padding: '8px 16px', flex: '1 0 auto', textAlign: 'center' }}
+              onClick={() => {
+                setActiveSubTab('settled');
+                setActiveCategoryFilter('all');
+                setActiveStatusFilter('all');
+              }}
+            >
+              পরিশোধিত (সম্পন্ন)
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${activeSubTab === 'person_ledger' ? 'active' : ''}`}
+              style={{ borderRadius: '10px', padding: '8px 16px', flex: '1 0 auto', textAlign: 'center' }}
+              onClick={() => {
+                setActiveSubTab('person_ledger');
+                setActiveCategoryFilter('all');
+                setActiveStatusFilter('all');
+              }}
+            >
+              ব্যক্তিভিত্তিক হিসাব
+            </button>
+            <button
+              type="button"
+              className={`filter-chip ${activeSubTab === 'all' ? 'active' : ''}`}
+              style={{ borderRadius: '10px', padding: '8px 16px', flex: '1 0 auto', textAlign: 'center' }}
+              onClick={() => {
+                setActiveSubTab('all');
+                setActiveCategoryFilter('all');
+                setActiveStatusFilter('all');
+              }}
+            >
+              সব হিসাব
+            </button>
+          </div>
+
+          <div className="history-controls">
+            <div className="search-box">
+              <SearchIcon size={18} className="search-icon" />
+              <input 
+                type="text" 
+                className="search-input" 
+                placeholder={activeSubTab === 'person_ledger' ? "ব্যক্তির নাম দিয়ে খুঁজুন..." : "হিসাব খুঁজুন (বিবরণ, টাকা, ব্যক্তি, তারিখ)..."} 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+              />
+            </div>
+            
+            {activeSubTab === 'all' && (
+              <>
+                <div className="filters-row">
+                  <button type="button" className={`filter-chip ${activeCategoryFilter==='all'?'active':''}`} onClick={() => setActiveCategoryFilter('all')}>সব ক্যাটাগরি</button>
+                  <button type="button" className={`filter-chip ${activeCategoryFilter==='borrowed'?'active':''}`} onClick={() => setActiveCategoryFilter('borrowed')}>{categories.borrowed}</button>
+                  <button type="button" className={`filter-chip ${activeCategoryFilter==='receivable'?'active':''}`} onClick={() => setActiveCategoryFilter('receivable')}>{categories.receivable}</button>
+                  <button type="button" className={`filter-chip ${activeCategoryFilter==='expense'?'active':''}`} onClick={() => setActiveCategoryFilter('expense')}>{categories.expense}</button>
+                  <button type="button" className={`filter-chip ${activeCategoryFilter==='owed'?'active':''}`} onClick={() => setActiveCategoryFilter('owed')}>{categories.owed}</button>
+                </div>
+
+                <div className="filters-row" style={{ marginTop: '2px', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
+                  <button type="button" className={`filter-chip ${activeStatusFilter==='all'?'active':''}`} onClick={() => setActiveStatusFilter('all')}>সব স্ট্যাটাস</button>
+                  <button type="button" className={`filter-chip ${activeStatusFilter==='pending'?'active':''}`} style={{ color:'var(--expense-color)' }} onClick={() => setActiveStatusFilter('pending')}>বাকি (অপরিশোধিত)</button>
+                  <button type="button" className={`filter-chip ${activeStatusFilter==='partial'?'active':''}`} style={{ color:'var(--due-color)' }} onClick={() => setActiveStatusFilter('partial')}>আংশিক পরিশোধিত</button>
+                  <button type="button" className={`filter-chip ${activeStatusFilter==='paid'?'active':''}`} style={{ color:'var(--income-color)' }} onClick={() => setActiveStatusFilter('paid')}>পরিশোধিত</button>
+                </div>
+              </>
+            )}
+
+            {activeSubTab !== 'person_ledger' && (
+              <div className="date-filter-group">
+                <div className="date-input-wrapper"><label>শুরুর তারিখ</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}/></div>
+                <div className="date-input-wrapper"><label>শেষ তারিখ</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}/></div>
+              </div>
+            )}
+            {(startDate || endDate || searchTerm || activeCategoryFilter !== 'all' || activeStatusFilter !== 'all' || activeSubTab !== 'all') && (
+              <button type="button" className="settings-action" style={{ fontSize:'12px', alignSelf:'flex-end', marginTop: '-4px' }} onClick={() => { setStartDate(''); setEndDate(''); setSearchTerm(''); setActiveCategoryFilter('all'); setActiveStatusFilter('all'); setActiveSubTab('all'); }}>ফিল্টার রিসেট</button>
+            )}
+          </div>
+
+          <div className="transaction-list" style={{ paddingBottom:'30px' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', fontSize:'13px', color:'var(--text-muted)', marginBottom:'4px', fontWeight:500 }}>
+              <span>
+                ফলাফল: {toBanglaDigits(activeSubTab === 'person_ledger' ? personLedgerList.length : filteredList.length)} টি {activeSubTab === 'person_ledger' ? 'ব্যক্তি' : 'হিসাব'}
+              </span>
+            </div>
+            
+            {activeSubTab === 'person_ledger' ? (
+              personLedgerList.length === 0 ? (
+                <div style={{ textAlign:'center', color:'var(--text-muted)', padding:'40px 20px', backgroundColor:'var(--bg-card)', borderRadius:'16px', border:'1px dashed var(--border)' }}>বকেয়া বর্গের কোনো ব্যক্তি পাওয়া যায়নি</div>
+              ) : (
+                personLedgerList.map(p => {
+                  const netBalance = p.receivablePending - p.payablePending;
+                  const firstLetter = p.name ? p.name.charAt(0).toUpperCase() : '👤';
+                  
+                  return (
+                    <div 
+                      className="transaction-card" 
+                      key={p.name.toLowerCase()}
+                      style={{ 
+                        borderLeft: netBalance > 0 ? '5px solid var(--income-color)' : netBalance < 0 ? '5px solid var(--expense-color)' : '5px solid var(--border)',
+                        padding: '16px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px'
+                      }}
+                    >
+                      <div 
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                        onClick={() => setExpandedPerson(expandedPerson === p.name.toLowerCase() ? null : p.name.toLowerCase())}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ 
+                            width: '40px', 
+                            height: '40px', 
+                            borderRadius: '50%', 
+                            backgroundColor: netBalance > 0 ? 'var(--income-bg)' : netBalance < 0 ? 'var(--expense-bg)' : 'var(--bg-input)', 
+                            color: netBalance > 0 ? 'var(--income-color)' : netBalance < 0 ? 'var(--expense-color)' : 'var(--text-muted)', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            fontWeight: 'bold',
+                            fontSize: '18px'
+                          }}>
+                            {firstLetter}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: '700', fontSize: '17px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {p.name}
+                              {expandedPerson === p.name.toLowerCase() ? <ChevronUpIcon size={16} color="var(--text-muted)" /> : <ChevronDownIcon size={16} color="var(--text-muted)" />}
+                            </div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>মোট হিসাব এন্ট্রি: {toBanglaDigits(p.totalTransactions)} টি (বিস্তারিত দেখতে ট্যাপ করুন)</div>
+                          </div>
+                        </div>
+                        
+                        <button 
+                          type="button" 
+                          className="btn btn-secondary" 
+                          style={{ fontSize: '12px', padding: '6px 12px', borderRadius: '8px', height: 'auto', flex: 'none' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSearchTerm(p.name);
+                            setActiveSubTab('all');
+                          }}
+                        >
+                          হিসাব দেখুন
+                        </button>
+                      </div>
+                      
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', backgroundColor: 'var(--bg-main)', padding: '10px 12px', borderRadius: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                        {p.receivablePending > 0 && (
+                          <div>
+                            <span style={{ color: 'var(--text-muted)' }}>আমি পাবো: </span>
+                            <strong style={{ color: 'var(--income-color)' }}>{formatBanglaCurrency(p.receivablePending)}</strong>
+                          </div>
+                        )}
+                        {p.payablePending > 0 && (
+                          <div>
+                            <span style={{ color: 'var(--text-muted)' }}>আমি দেবো (দেনা): </span>
+                            <strong style={{ color: 'var(--expense-color)' }}>{formatBanglaCurrency(p.payablePending)}</strong>
+                          </div>
+                        )}
+                        
+                        <div style={{ width: '100%', borderTop: '1px dashed var(--border)', margin: '4px 0' }}></div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                          <span style={{ fontWeight: '500' }}>অবशिष्ट নেট ব্যালেন্স:</span>
+                          {netBalance > 0 ? (
+                            <span className="tx-category-tag" style={{ backgroundColor: 'var(--income-bg)', color: 'var(--income-color)', margin: 0, fontSize: '12px', fontWeight: 'bold' }}>
+                              নেট পাওনা: {formatBanglaCurrency(netBalance)}
+                            </span>
+                          ) : netBalance < 0 ? (
+                            <span className="tx-category-tag" style={{ backgroundColor: 'var(--expense-bg)', color: 'var(--expense-color)', margin: 0, fontSize: '12px', fontWeight: 'bold' }}>
+                              নেট দেনা: {formatBanglaCurrency(Math.abs(netBalance))}
+                            </span>
+                          ) : (
+                            <span className="tx-category-tag" style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-muted)', margin: 0, fontSize: '12px' }}>
+                              সমতা
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Expanded Transactions list of this person */}
+                      {expandedPerson === p.name.toLowerCase() && (
+                        <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                          <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '8px', color: 'var(--text-muted)' }}>লেনদেনের বিবরণী:</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {transactions
+                              .filter(tx => tx.personName && tx.personName.trim().toLowerCase() === p.name.toLowerCase() && tx.status !== 'paid')
+                              .sort((a, b) => {
+                                const dateA = a.date + 'T' + (a.time || '00:00');
+                                const dateB = b.date + 'T' + (b.time || '00:00');
+                                return dateB.localeCompare(dateA);
+                              })
+                              .map(tx => (
+                                <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px 12px' }}>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', backgroundColor: 'var(--bg-input)', padding: '1px 5px', borderRadius: '4px' }}>
+                                        {toBanglaDigits(tx.serial.toString().padStart(3, '0'))}
+                                      </span>
+                                      <span style={{ fontWeight: '600', fontSize: '14px', textDecoration: tx.status === 'paid' ? 'line-through' : 'none' }}>
+                                        {tx.description}
+                                      </span>
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                      {formatBanglaDate(tx.date)} • {formatBanglaTime(tx.time)}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
+                                      <span className="tx-category-tag" style={{ border: '1px solid var(--border)', fontSize: '10px', padding: '1px 6px', margin: 0 }}>
+                                        {categories[tx.categoryType]}
+                                      </span>
+                                      <span className="tx-category-tag" style={{ 
+                                        backgroundColor: tx.status === 'paid' ? 'var(--income-bg)' : tx.status === 'partial' ? 'var(--due-bg)' : 'var(--expense-bg)', 
+                                        color: tx.status === 'paid' ? 'var(--income-color)' : tx.status === 'partial' ? 'var(--due-color)' : 'var(--expense-color)',
+                                        fontSize: '10px', 
+                                        padding: '1px 6px', 
+                                        margin: 0 
+                                      }}>
+                                        {tx.status === 'paid' ? 'পরিশোধিত' : tx.status === 'partial' ? `আংশিক (বাকি: ${formatBanglaCurrency(tx.pendingAmount)})` : 'বাকি (অপরিশোধিত)'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                                    <span style={{ fontWeight: '700', fontSize: '15px', color: tx.status === 'paid' ? 'var(--income-color)' : 'var(--text-main)' }}>
+                                      {formatBanglaCurrency(tx.amount)}
+                                    </span>
+                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                      <button type="button" className="icon-button" style={{ padding: '2px' }} title="সংশোধন" onClick={(e) => { e.stopPropagation(); onEdit(tx); }}>
+                                        <EditIcon size={14} />
+                                      </button>
+                                      <button type="button" className="icon-button" style={{ color: 'var(--expense-color)', padding: '2px' }} title="মুছুন" onClick={(e) => { e.stopPropagation(); setDeleteTargetId(tx.id); }}>
+                                        <TrashIcon size={14} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )
+            ) : (
+              filteredList.length === 0 ? (
+                <div style={{ textAlign:'center', color:'var(--text-muted)', padding:'40px 20px', backgroundColor:'var(--bg-card)', borderRadius:'16px', border:'1px dashed var(--border)' }}>কোন হিসাব পাওয়া যায়নি</div>
+              ) : (
+                filteredList.map(tx => (
+                  <div 
+                    className="transaction-card" 
+                    key={tx.id}
+                    style={{ 
+                      opacity: tx.status === 'paid' ? 0.75 : 1,
+                      borderLeft: tx.status === 'paid' ? '5px solid var(--income-color)' : tx.status === 'partial' ? '5px solid var(--due-color)' : '5px solid var(--expense-color)'
+                    }}
+                  >
+                    <div className="transaction-meta">
+                      <div className="tx-header">
+                        <span className="tx-serial">{padSerial(tx.serial)}</span>
+                        <span className="tx-description" style={{ textDecoration: tx.status === 'paid' ? 'line-through' : 'none' }}>{tx.description}</span>
+                      </div>
+                      <div className="tx-details">
+                        {formatBanglaDate(tx.date)} • {formatBanglaTime(tx.time)}
+                        {tx.personName && ` • 👤 ${tx.personName}`}
+                      </div>
+                      {tx.note && <div style={{ fontSize:'12px', color:'var(--text-muted)', fontStyle:'italic', marginTop:'2px' }}>নোট: {tx.note}</div>}
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '4px', flexWrap:'wrap' }}>
+                        <span className="tx-category-tag" style={{ border: '1px solid var(--border)' }}>{categories[tx.categoryType]}</span>
+                        {renderStatusBadge(tx)}
+                      </div>
+                    </div>
+                    <div className="transaction-right">
+                      <div className="tx-amount" style={{ color: tx.status === 'paid' ? 'var(--income-color)' : 'var(--text-main)', display:'flex', alignItems:'center', gap:'4px' }}>
+                        {formatBanglaCurrency(tx.amount)}
+                        {tx.status === 'paid' && <CheckCircleIcon size={16} color="var(--income-color)" />}
+                      </div>
+                      
+                      {tx.status !== 'paid' && (
+                        <button 
+                          type="button" 
+                          className="btn btn-secondary" 
+                          style={{ fontSize:'11px', padding:'4px 8px', borderRadius:'6px', marginTop:'4px', height:'auto' }}
+                          onClick={() => openQuickPay(tx)}
+                        >
+                          পরিশোধ করুন
+                        </button>
+                      )}
+
+                      <div className="tx-actions" style={{ marginTop: '8px' }}>
+                        <button type="button" className="icon-button" onClick={() => onEdit(tx)}><EditIcon size={16}/></button>
+                        <button type="button" className="icon-button" style={{ color:'var(--expense-color)' }} onClick={() => setDeleteTargetId(tx.id)}><TrashIcon size={16}/></button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )
+            )}
+          </div>
+
+          {deleteTargetId && (
+            <div className="modal-overlay" style={{ alignItems:'center' }} onClick={() => setDeleteTargetId(null)}>
+              <div className="confirm-box" onClick={e => e.stopPropagation()}>
+                <div style={{ display:'flex', justifyContent:'center', color:'var(--expense-color)', marginBottom:'12px' }}><AlertIcon size={48}/></div>
+                <div className="confirm-title">আপনি কি নিশ্চিত?</div>
+                <div className="confirm-text">আপনি কি এই হিসাবটি মুছে ফেলতে চান?</div>
+                <div className="confirm-actions">
+                  <button type="button" className="btn btn-secondary" onClick={() => setDeleteTargetId(null)}>বাতিল</button>
+                  <button type="button" className="btn btn-danger" onClick={handleConfirmDelete}>মুছে ফেলুন</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {quickPayTx && (
+            <div className="modal-overlay" style={{ alignItems:'center' }} onClick={() => setQuickPayTx(null)}>
+              <div className="modal-content" style={{ width:'90%', maxWidth:'400px', borderRadius:'24px' }} onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                  <div className="modal-title">পরিশোধ আপডেট</div>
+                  <button type="button" className="icon-button" onClick={() => setQuickPayTx(null)}><XIcon size={20}/></button>
+                </div>
+                <form onSubmit={handleQuickPaySubmit}>
+                  <div style={{ backgroundColor:'var(--bg-main)', padding:'12px', borderRadius:'12px', marginBottom:'16px' }}>
+                    <div style={{ fontWeight:'bold' }}>{quickPayTx.description}</div>
+                    <div style={{ fontSize:'13px', color:'var(--text-muted)', marginTop:'4px' }}>
+                      মোট: {formatBanglaCurrency(quickPayTx.amount)} | বকেয়া: {formatBanglaCurrency(quickPayTx.pendingAmount)}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">পরিশোধের ধরণ</label>
+                    <div style={{ display:'flex', gap:'10px' }}>
+                      <button type="button" className={`btn ${quickPayMode === 'full' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding:'10px' }} onClick={()=>setQuickPayMode('full')}>সম্পূর্ণ পরিশোধ</button>
+                      <button type="button" className={`btn ${quickPayMode === 'partial' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding:'10px' }} onClick={()=>setQuickPayMode('partial')}>আংশিক পরিশোধ</button>
+                    </div>
+                  </div>
+
+                  {quickPayMode === 'partial' && (
+                    <div className="form-group">
+                      <label className="form-label">পরিশোধিত টাকার পরিমাণ</label>
+                      <input type="text" className="form-input" placeholder="যেমন: ৫০০" value={quickPaidAmount} onChange={e=>setQuickPaidAmount(e.target.value)} required />
+                    </div>
+                  )}
+
+                  <div className="form-actions">
+                    <button type="button" className="btn btn-secondary" onClick={() => setQuickPayTx(null)}>বাতিল</button>
+                    <button type="submit" className="btn btn-primary">আপডেট</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 5. FULL-PAGE CALCULATOR TAB
+    function CalculatorTab({ onAddWithAmount }) {
+      const [display, setDisplay] = useState('0');
+      const [formula, setFormula] = useState('');
+      const [isDone, setIsDone] = useState(false);
+
+      const handleDigit = (digit) => {
+        if (isDone) { setDisplay(digit); setFormula(''); setIsDone(false); return; }
+        if (display === '0') setDisplay(digit);
+        else setDisplay(display + digit);
+      };
+
+      const handleDecimal = () => {
+        if (isDone) { setDisplay('0.'); setFormula(''); setIsDone(false); return; }
+        const parts = display.split(/[+\-*/]/);
+        const lastPart = parts[parts.length - 1];
+        if (!lastPart.includes('.')) setDisplay(display + '.');
+      };
+
+      const handleOperator = (op) => {
+        setIsDone(false);
+        const lastChar = display[display.length - 1];
+        if (['+', '-', '*', '/'].includes(lastChar)) {
+          setDisplay(display.slice(0, -1) + op);
+        } else {
+          setDisplay(display + op);
+        }
+      };
+
+      const handlePercent = () => {
+        const parts = display.split(/[+\-*/]/);
+        const lastPart = parts[parts.length - 1];
+        if (!lastPart || lastPart === '0') return;
+        const value = parseFloat(lastPart) / 100;
+        const beforePart = display.slice(0, display.length - lastPart.length);
+        setDisplay(beforePart + value.toString());
+      };
+
+      const handleClear = () => { setDisplay('0'); setFormula(''); setIsDone(false); };
+      
+      const handleBackspace = () => {
+        if (isDone) { handleClear(); return; }
+        if (display.length > 1) setDisplay(display.slice(0, -1));
+        else setDisplay('0');
+      };
+
+      const handleCalculate = () => {
+        if (isDone) return;
+        let expr = display;
+        const lastChar = expr[expr.length - 1];
+        if (['+', '-', '*', '/'].includes(lastChar)) expr = expr.slice(0, -1);
+        try {
+          const result = evaluateExpression(expr);
+          const roundedResult = Math.round(result * 10000) / 10000;
+          setFormula(expr + '=');
+          setDisplay(roundedResult.toString());
+          setIsDone(true);
+        } catch {
+          setDisplay('Error');
+          setIsDone(true);
+        }
+      };
+
+      const evaluateExpression = (expr) => {
+        const tokens = [];
+        let numberBuffer = '';
+        for (let i = 0; i < expr.length; i++) {
+          const char = expr[i];
+          if (/[0-9.]/.test(char)) numberBuffer += char;
+          else if (['+', '-', '*', '/'].includes(char)) {
+            if (numberBuffer) { tokens.push(parseFloat(numberBuffer)); numberBuffer = ''; }
+            tokens.push(char);
+          }
+        }
+        if (numberBuffer) tokens.push(parseFloat(numberBuffer));
+        if (tokens.length === 0) return 0;
+
+        const firstPass = [];
+        let i = 0;
+        while (i < tokens.length) {
+          const token = tokens[i];
+          if (token === '*' || token === '/') {
+            const prev = firstPass.pop();
+            const next = tokens[i + 1];
+            if (prev === undefined || next === undefined) throw new Error();
+            const val = token === '*' ? prev * next : prev / next;
+            firstPass.push(val);
+            i += 2;
+          } else {
+            firstPass.push(token);
+            i++;
+          }
+        }
+
+        let result = firstPass[0];
+        let j = 1;
+        while (j < firstPass.length) {
+          const op = firstPass[j];
+          const val = firstPass[j + 1];
+          if (op === '+') result += val;
+          else if (op === '-') result -= val;
+          j += 2;
+        }
+        return result;
+      };
+
+      const handleCreateTransaction = () => {
+        let finalVal = display;
+        if (/[+\-*/]/.test(display) && !isDone) {
+          let expr = display;
+          const lastChar = expr[expr.length - 1];
+          if (['+', '-', '*', '/'].includes(lastChar)) expr = expr.slice(0, -1);
+          try {
+            const res = evaluateExpression(expr);
+            finalVal = (Math.round(res * 100) / 100).toString();
+          } catch {
+            finalVal = '0';
+          }
+        }
+        const numericVal = parseFloat(finalVal);
+        onAddWithAmount(isNaN(numericVal) ? 0 : numericVal);
+      };
+
+      return (
+        <div className="content-area" style={{ display:'flex', flexDirection:'column', justifyContent:'center', paddingBottom:'30px' }}>
+          <h2 className="section-title" style={{ marginTop:0, textAlign:'center' }}>ক্যালকুলেটর</h2>
+          <div style={{ maxWidth:'360px', width:'100%', margin:'0 auto' }}>
+            <div className="calc-display" style={{ minHeight:'80px', marginBottom:'16px' }}>
+              {formula && <div className="calc-formula">{toBanglaDigits(formula)}</div>}
+              <div>{toBanglaDigits(display)}</div>
+            </div>
+            <div className="calculator-grid">
+              <button type="button" className="calc-btn op" onClick={handleClear}>C</button>
+              <button type="button" className="calc-btn op" onClick={handleBackspace}><BackspaceIcon size={20}/></button>
+              <button type="button" className="calc-btn op" onClick={handlePercent}>%</button>
+              <button type="button" className="calc-btn op" onClick={() => handleOperator('/')}>÷</button>
+              <button type="button" className="calc-btn" onClick={() => handleDigit('7')}>7</button>
+              <button type="button" className="calc-btn" onClick={() => handleDigit('8')}>8</button>
+              <button type="button" className="calc-btn" onClick={() => handleDigit('9')}>9</button>
+              <button type="button" className="calc-btn op" onClick={() => handleOperator('*')}>×</button>
+              <button type="button" className="calc-btn" onClick={() => handleDigit('4')}>4</button>
+              <button type="button" className="calc-btn" onClick={() => handleDigit('5')}>5</button>
+              <button type="button" className="calc-btn" onClick={() => handleDigit('6')}>6</button>
+              <button type="button" className="calc-btn op" onClick={() => handleOperator('-')}>-</button>
+              <button type="button" className="calc-btn" onClick={() => handleDigit('1')}>1</button>
+              <button type="button" className="calc-btn" onClick={() => handleDigit('2')}>2</button>
+              <button type="button" className="calc-btn" onClick={() => handleDigit('3')}>3</button>
+              <button type="button" className="calc-btn op" onClick={() => handleOperator('+')}>+</button>
+              <button type="button" className="calc-btn" style={{ gridColumn:'span 2' }} onClick={() => handleDigit('0')}>0</button>
+              <button type="button" className="calc-btn" onClick={handleDecimal}>.</button>
+              <button type="button" className="calc-btn eq" onClick={handleCalculate}>=</button>
+            </div>
+            <button type="button" className="btn btn-primary" style={{ width:'100%', marginTop:'20px', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px' }} onClick={handleCreateTransaction}>
+              <PlusIcon size={20} /> হিসাব খাতায় লিখুন
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // 6. STATISTICS & REPORTS PAGE
+    function Report({ transactions, categories }) {
+      const getStats = () => {
+        let totalBorrowed = 0; let totalReceivable = 0; let totalExpense = 0; let totalOwed = 0;
+        let countBorrowed = 0; let countReceivable = 0; let countExpense = 0; let countOwed = 0;
+        let totalPaid = 0; let totalPending = 0;
+        let countPaid = 0; let countPartial = 0; let countPending = 0;
+
+        transactions.forEach(tx => {
+          const amt = tx.amount;
+          const paid = tx.paidAmount || 0;
+          const pending = tx.pendingAmount || 0;
+          const type = tx.categoryType;
+          const status = tx.status || 'paid';
+
+          if (type === 'borrowed') { totalBorrowed += amt; countBorrowed++; }
+          else if (type === 'receivable') { totalReceivable += amt; countReceivable++; }
+          else if (type === 'expense') { totalExpense += amt; countExpense++; }
+          else if (type === 'owed') { totalOwed += amt; countOwed++; }
+
+          totalPaid += paid;
+          totalPending += pending;
+
+          if (status === 'paid') countPaid++;
+          else if (status === 'partial') countPartial++;
+          else countPending++;
+        });
+
+        const totalVolume = totalBorrowed + totalReceivable + totalExpense + totalOwed;
+        const countTotal = transactions.length;
+        const averageTx = countTotal > 0 ? (totalVolume / countTotal) : 0;
+        const borrowedPercent = totalVolume > 0 ? Math.round((totalBorrowed / totalVolume) * 100) : 0;
+        const receivablePercent = totalVolume > 0 ? Math.round((totalReceivable / totalVolume) * 100) : 0;
+        const expensePercent = totalVolume > 0 ? Math.round((totalExpense / totalVolume) * 100) : 0;
+        const owedPercent = totalVolume > 0 ? Math.round((totalOwed / totalVolume) * 100) : 0;
+        const settledRatioPercent = totalVolume > 0 ? Math.round((totalPaid / totalVolume) * 100) : 0;
+
+        return { totalBorrowed, totalReceivable, totalExpense, totalOwed, countBorrowed, countReceivable, countExpense, countOwed, totalPaid, totalPending, countPaid, countPartial, countPending, countTotal, averageTx, borrowedPercent, receivablePercent, expensePercent, owedPercent, settledRatioPercent };
+      };
+
+      const stats = getStats();
+      const radius = 50;
+      const circumference = 2 * Math.PI * radius;
+      const strokeDashoffset = circumference - (stats.settledRatioPercent / 100) * circumference;
+
+      return (
+        <div className="content-area" style={{ paddingBottom:'40px' }}>
+          <h2 className="section-title" style={{ marginTop:0 }}>হিসাব রিপোর্ট ও পরিসংখ্যান</h2>
+          <div className="stats-summary">
+            <div className="summary-card" style={{ borderLeft:'4px solid #10b981', minHeight:'80px', display:'flex', flexDirection:'row', alignItems:'center', justifyContent:'space-between' }}>
+              <div><div className="summary-label">মোট পরিশোধিত টাকা</div><div className="summary-value" style={{ color:'#10b981' }}>{formatBanglaCurrency(stats.totalPaid)}</div></div>
+              <div style={{ padding:'10px', backgroundColor:'#ecfdf5', borderRadius:'12px', color:'#10b981' }}><CheckCircleIcon size={24}/></div>
+            </div>
+            <div className="summary-card" style={{ borderLeft:'4px solid var(--expense-color)', minHeight:'80px', display:'flex', flexDirection:'row', alignItems:'center', justifyContent:'space-between' }}>
+              <div><div className="summary-label">মোট বকেয়া / অপরিশোধিত</div><div className="summary-value" style={{ color:'var(--expense-color)' }}>{formatBanglaCurrency(stats.totalPending)}</div></div>
+              <div style={{ padding:'10px', backgroundColor:'var(--expense-bg)', borderRadius:'12px', color:'var(--expense-color)' }}><TrendingDown size={24}/></div>
+            </div>
+          </div>
+
+          <div className="stats-bar-container" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'16px', marginBottom:'20px', padding:'24px 16px' }}>
+            <span style={{ fontSize:'15px', fontWeight:'700' }}>মোট পরিশোধ বনাম বকেয়া অনুপাত</span>
+            <div style={{ position:'relative', width:'130px', height:'130px' }}>
+              <svg width="130" height="130" viewBox="0 0 120 120" style={{ transform:'rotate(-90deg)' }}>
+                <circle cx="60" cy="60" r={radius} fill="transparent" stroke="var(--bg-input)" strokeWidth="10" />
+                <circle cx="60" cy="60" r={radius} fill="transparent" stroke="#10b981" strokeWidth="10" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" />
+              </svg>
+              <div style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center' }}>
+                <span style={{ fontSize:'22px', fontWeight:'700' }}>{toBanglaDigits(stats.settledRatioPercent)}%</span>
+                <span style={{ fontSize:'10px', color:'var(--text-muted)' }}>পরিশোধিত</span>
+              </div>
+            </div>
+            <p style={{ fontSize:'13px', color:'var(--text-muted)', textAlign:'center' }}>আপনার মোট হিসাবের {toBanglaDigits(stats.settledRatioPercent)}% টাকা লেনদেন পরিশোধ হয়েছে।</p>
+          </div>
+
+          <div className="stats-bar-container" style={{ marginBottom:'20px' }}>
+            <div className="stats-bar-title"><span>ক্যাটাগরি ভিত্তিক হিসাব অনুপাত</span><span>শতকরা (%)</span></div>
+            <div style={{ display:'flex', flexDirection:'column', gap:'16px', marginTop:'12px' }}>
+              {['borrowed', 'receivable', 'expense', 'owed'].map(key => {
+                const pct = key === 'borrowed' ? stats.borrowedPercent : key === 'receivable' ? stats.receivablePercent : key === 'expense' ? stats.expensePercent : stats.owedPercent;
+                const col = key === 'borrowed' ? 'var(--expense-color)' : key === 'receivable' ? 'var(--income-color)' : key === 'expense' ? '#3b82f6' : 'var(--due-color)';
+                return (
+                  <div key={key}>
+                    <div style={{ display:'flex', justifyContent:'space-between', fontSize:'13px', marginBottom:'4px', fontWeight:500 }}>
+                      <span>{categories[key]}</span><span style={{ color:col }}>{toBanglaDigits(pct)}%</span>
+                    </div>
+                    <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%`, backgroundColor:col }}/></div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="stats-bar-container">
+            <span style={{ fontSize:'15px', fontWeight:'700', display:'block', marginBottom:'12px' }}>লেনদেনের বিবরণী পরিসংখ্যান</span>
+            <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'14px', borderBottom:'1px solid #f1f5f9', paddingBottom:'8px' }}>
+                <span style={{ color:'var(--text-muted)' }}>মোট হিসাব এন্ট্রি:</span><span style={{ fontWeight:600 }}>{toBanglaDigits(stats.countTotal)} টি</span>
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'14px', borderBottom:'1px solid #f1f5f9', paddingBottom:'8px' }}>
+                <span style={{ color:'var(--text-muted)' }}>সম্পূর্ণ পরিশোধিত লেনদেন:</span><span style={{ fontWeight:600, color:'#10b981' }}>{toBanglaDigits(stats.countPaid)} টি</span>
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'14px', borderBottom:'1px solid #f1f5f9', paddingBottom:'8px' }}>
+                <span style={{ color:'var(--text-muted)' }}>আংশিক পরিশোধিত বকেয়া:</span><span style={{ fontWeight:600, color:'var(--due-color)' }}>{toBanglaDigits(stats.countPartial)} টি</span>
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'14px', borderBottom:'1px solid #f1f5f9', paddingBottom:'8px' }}>
+                <span style={{ color:'var(--text-muted)' }}>পরিশোধহীন বাকি এন্ট্রি:</span><span style={{ fontWeight:600, color:'var(--expense-color)' }}>{toBanglaDigits(stats.countPending)} টি</span>
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'14px', paddingTop: '4px' }}>
+                <span style={{ color:'var(--text-muted)' }}>গড় লেনদেন অ্যামাউন্ট:</span><span style={{ fontWeight:600, color:'var(--primary)' }}>{formatBanglaCurrency(stats.averageTx)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 7. SETTINGS, BACKUP, & CREDIT SCREEN
+    function Settings({ categories, onRestoreSuccess, onClearAllData, currentUser, onLogout, onProfileUpdate }) {
+      const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+      
+      const [oldPin, setOldPin] = useState('');
+      const [newPin, setNewPin] = useState('');
+      const [confirmNewPin, setConfirmNewPin] = useState('');
+
+      const exportBackup = () => {
+        const backup = {
+          app: 'Hisaber Khata',
+          version: '1.0.0',
+          exportedAt: new Date().toISOString(),
+          username: currentUser.username,
+          name: currentUser.name,
+          data: {
+            categories,
+            transactions: getStoredTransactions(currentUser.username)
+          }
+        };
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hisaber_khata_backup_${currentUser.username}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+
+      const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const parsed = JSON.parse(event.target.result);
+            if (parsed.app !== 'Hisaber Khata' || !parsed.data) throw new Error();
+            saveStoredTransactions(parsed.data.transactions, currentUser.username);
+            saveStoredCategories(parsed.data.categories, currentUser.username);
+            onRestoreSuccess(parsed.data.transactions, parsed.data.categories);
+            alert('ডাটা সফলভাবে রিস্টোর করা হয়েছে!');
+          } catch (e) {
+            alert('ভুল ফাইল! অনুগ্রহ করে সঠিক হিসাবের খাতা ব্যাকআপ ফাইল সিলেক্ট করুন।');
+          }
+        };
+        reader.readAsText(file);
+      };
+
+      const handleClear = () => {
+        clearAllAppData(currentUser.username);
+        onClearAllData();
+        setIsClearConfirmOpen(false);
+        alert('আপনার প্রোফাইলের সমস্ত ডাটা সফলভাবে মুছে ফেলা হয়েছে!');
+      };
+
+      const handlePinChange = (e) => {
+        e.preventDefault();
+        if (oldPin !== currentUser.pin) {
+          alert('আপনার বর্তমান পিন কোডটি ভুল!');
+          return;
+        }
+        if (newPin.length !== 4) {
+          alert('নতুন পিন অবশ্যই ৪ সংখ্যার হতে হবে!');
+          return;
+        }
+        if (newPin !== confirmNewPin) {
+          alert('নতুন পিন কোড দুটি মেলেনি!');
+          return;
+        }
+        
+        const usersList = getStoredUsers();
+        const updatedUsers = usersList.map(u => {
+          if (u.username === currentUser.username) {
+            return { ...u, pin: newPin };
+          }
+          return u;
+        });
+        saveStoredUsers(updatedUsers);
+        onProfileUpdate({ ...currentUser, pin: newPin });
+        
+        setOldPin('');
+        setNewPin('');
+        setConfirmNewPin('');
+        alert('আপনার পিন কোড সফলভাবে পরিবর্তন করা হয়েছে!');
+      };
+
+      return (
+        <div className="content-area" style={{ paddingBottom:'40px' }}>
+          <h2 className="section-title" style={{ marginTop:0 }}>সেটিংস</h2>
+          <div className="settings-list">
+            
+            <div className="settings-section">
+              <div className="settings-section-title">প্রোফাইল ও নিরাপত্তা</div>
+              
+              <div className="settings-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="settings-info">
+                  <span className="settings-label" style={{ fontWeight: 'bold', fontSize: '16px' }}>👤 {currentUser.name}</span>
+                  <span className="settings-desc">ইউজারনেম: @{currentUser.username}</span>
+                </div>
+                <button 
+                  type="button" 
+                  className="settings-action" 
+                  onClick={onLogout}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--expense-bg)', color: 'var(--expense-color)', border: 'none' }}
+                >
+                  <LockIcon size={16} /> লগআউট করুন
+                </button>
+              </div>
+
+              <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px', marginTop: '12px' }}>
+                <span className="settings-label" style={{ marginBottom: '8px', display: 'block', fontSize: '13px' }}>পিন কোড পরিবর্তন করুন</span>
+                <form onSubmit={handlePinChange} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                    <input 
+                      type="password" 
+                      maxLength="4" 
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                      placeholder="বর্তমান পিন" 
+                      value={oldPin} 
+                      onChange={e => setOldPin(e.target.value.replace(/[^0-9]/g, ''))}
+                      className="form-input" 
+                      style={{ fontSize: '13px', padding: '8px 12px', textAlign: 'center' }}
+                      required
+                    />
+                    <input 
+                      type="password" 
+                      maxLength="4" 
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                      placeholder="নতুন পিন" 
+                      value={newPin} 
+                      onChange={e => setNewPin(e.target.value.replace(/[^0-9]/g, ''))}
+                      className="form-input" 
+                      style={{ fontSize: '13px', padding: '8px 12px', textAlign: 'center' }}
+                      required
+                    />
+                    <input 
+                      type="password" 
+                      maxLength="4" 
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                      placeholder="পিন নিশ্চিত করুন" 
+                      value={confirmNewPin} 
+                      onChange={e => setConfirmNewPin(e.target.value.replace(/[^0-9]/g, ''))}
+                      className="form-input" 
+                      style={{ fontSize: '13px', padding: '8px 12px', textAlign: 'center' }}
+                      required
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '8px', width: 'auto', alignSelf: 'flex-end', height: 'auto' }}
+                  >
+                    পিন কোড আপডেট করুন
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <div className="settings-section-title">ক্যাটাগরি ব্যবস্থাপনা (নির্ধারিত)</div>
+              <div>
+                <div className="settings-row"><div className="settings-info"><span className="settings-label">আমি ধার নিয়েছি (Money I Borrow)</span><span className="settings-desc">{categories.borrowed}</span></div></div>
+                <div className="settings-row"><div className="settings-info"><span className="settings-label">আমি পাবো (Money I Receive)</span><span className="settings-desc">{categories.receivable}</span></div></div>
+                <div className="settings-row"><div className="settings-info"><span className="settings-label">ক্রয় / খরচ (Expenses)</span><span className="settings-desc">{categories.expense}</span></div></div>
+                <div className="settings-row"><div className="settings-info"><span className="settings-label">বাকি / বকেয়া (Owed / Due)</span><span className="settings-desc">{categories.owed}</span></div></div>
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <div className="settings-section-title">ডাটা ব্যাকআপ ও রিস্টোর</div>
+              <div className="settings-row">
+                <div className="settings-info" style={{ marginRight:'16px' }}><span className="settings-label">ব্যাকআপ ফাইল ডাউনলোড</span><span className="settings-desc">হিসাবসমূহ অফলাইনে ফাইল আকারে ডাউনলোড করুন।</span></div>
+                <button type="button" className="settings-action" onClick={exportBackup} style={{ display:'flex', alignItems:'center', gap:'6px' }}><DownloadIcon size={16}/> ব্যাকআপ</button>
+              </div>
+              <div className="settings-row">
+                <div className="settings-info" style={{ marginRight:'16px' }}><span className="settings-label">ডাটা রিস্টোর</span><span className="settings-desc">ব্যাকআপ ফাইল সিলেক্ট করে পুনরায় ইম্পোর্ট করুন।</span></div>
+                <button type="button" className="settings-action" onClick={()=>document.getElementById('restore-file-input').click()} style={{ display:'flex', alignItems:'center', gap:'6px' }}><UploadIcon size={16}/> রিস্টোর</button>
+                <input id="restore-file-input" type="file" accept=".json" style={{ display:'none' }} onChange={handleFileChange} />
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <div className="settings-section-title" style={{ color:'var(--expense-color)' }}>ডাটা রিসেট</div>
+              <div className="settings-row">
+                <div className="settings-info"><span className="settings-label" style={{ color:'var(--expense-color)' }}>সব ডাটা মুছুন</span><span className="settings-desc">এই প্রোফাইলের সমস্ত হিসাব মুছে ফেলুন।</span></div>
+                <button type="button" className="settings-action danger" onClick={()=>setIsClearConfirmOpen(true)}>মুছুন</button>
+              </div>
+            </div>
+
+            <div className="credit-box">
+              <div className="credit-app-name">হিসাবের খাতা</div>
+              <div style={{ fontSize:'12px', color:'var(--text-muted)', marginBottom:'8px' }}>ভার্সন ১.০.০ (PWA)</div>
+              <div className="credit-by" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'4px' }}>
+                <ShieldCheckIcon size={16} color="var(--primary)" /> App By Hasibul Alam
+              </div>
+            </div>
+          </div>
+
+          {isClearConfirmOpen && (
+            <div className="modal-overlay" style={{ alignItems:'center' }} onClick={()=>setIsClearConfirmOpen(false)}>
+              <div className="confirm-box" onClick={e=>e.stopPropagation()}>
+                <div style={{ display:'flex', justifyContent:'center', color:'var(--expense-color)', marginBottom:'12px' }}><AlertIcon size={48}/></div>
+                <div className="confirm-title" style={{ color:'var(--expense-color)' }}>সমস্ত ডাটা মুছবেন?</div>
+                <div className="confirm-text">আপনি কি নিশ্চিত যে এই প্রোফাইলের সমস্ত হিসাব বিবরণী মুছে ফেলতে চান?</div>
+                <div className="confirm-actions">
+                  <button type="button" className="btn btn-secondary" onClick={()=>setIsClearConfirmOpen(false)}>বাতিল</button>
+                  <button type="button" className="btn btn-danger" onClick={handleClear}>সব মুছুন</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ==========================================
+    // CORE APPLICATION CONTAINER (APP)
+    // ==========================================
+    function App() {
+      const [currentUser, setCurrentUser] = useState(null);
+      const [activeTab, setActiveTab] = useState('home');
+      const [transactions, setTransactions] = useState([]);
+      const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+      const [initialSubTab, setInitialSubTab] = useState('all');
+      const [initialStatusFilter, setInitialStatusFilter] = useState('all');
+      const [initialCategoryFilter, setInitialCategoryFilter] = useState('all');
+      
+      const [isFormOpen, setIsFormOpen] = useState(false);
+      const [transactionToEdit, setTransactionToEdit] = useState(null);
+
+      useEffect(() => {
+        const user = getCurrentUser();
+        if (user) {
+          setCurrentUser(user);
+          setTransactions(getStoredTransactions(user.username));
+          setCategories(getStoredCategories(user.username));
+        }
+      }, []);
+
+      const handleLoginSuccess = (user) => {
+        setCurrentUser(user);
+        setTransactions(getStoredTransactions(user.username));
+        setCategories(getStoredCategories(user.username));
+        setActiveTab('home');
+      };
+
+      const handleLogout = () => {
+        logoutUser();
+        setCurrentUser(null);
+        setTransactions([]);
+      };
+
+      const handleSaveTransaction = (payload) => {
+        if (!currentUser) return;
+        let updated = [];
+        const isEdit = transactions.some(t => t.id === payload.id);
+        if (isEdit) {
+          updated = transactions.map(t => t.id === payload.id ? payload : t);
+        } else {
+          updated = [...transactions, payload];
+        }
+        updated.sort((a, b) => a.serial - b.serial);
+        setTransactions(updated);
+        saveStoredTransactions(updated, currentUser.username);
+        setIsFormOpen(false);
+        setTransactionToEdit(null);
+      };
+
+      const handleDeleteTransaction = (id) => {
+        if (!currentUser) return;
+        const updated = transactions.filter(t => t.id !== id);
+        setTransactions(updated);
+        saveStoredTransactions(updated, currentUser.username);
+      };
+
+      const handleRestoreSuccess = (newTxs, newCats) => {
+        setTransactions(newTxs);
+        setCategories(newCats);
+      };
+
+      const handleClearAllData = () => {
+        setTransactions([]);
+        setCategories(DEFAULT_CATEGORIES);
+      };
+
+      const handleViewSubTab = (subTabKey, statusFilterKey = 'all', categoryFilterKey = 'all') => {
+        if (['borrowed', 'receivable', 'expense', 'owed'].includes(subTabKey)) {
+          if (subTabKey === 'borrowed' || subTabKey === 'owed') {
+            setInitialSubTab('i_owe');
+            setInitialCategoryFilter(subTabKey);
+            setInitialStatusFilter('all');
+          } else if (subTabKey === 'receivable') {
+            setInitialSubTab('they_owe');
+            setInitialCategoryFilter('all');
+            setInitialStatusFilter('all');
+          } else if (subTabKey === 'expense') {
+            setInitialSubTab('expense');
+            setInitialCategoryFilter('all');
+            setInitialStatusFilter('all');
+          }
+        } else {
+          if (subTabKey === 'all_pending') {
+            setInitialSubTab('all');
+            setInitialStatusFilter('pending');
+            setInitialCategoryFilter('all');
+          } else if (subTabKey === 'all_partial') {
+            setInitialSubTab('all');
+            setInitialStatusFilter('partial');
+            setInitialCategoryFilter('all');
+          } else {
+            setInitialSubTab(subTabKey);
+            setInitialStatusFilter(statusFilterKey);
+            setInitialCategoryFilter(categoryFilterKey);
+          }
+        }
+        setActiveTab('history');
+      };
+
+      const handleAddWithAmount = (amount) => {
+        setTransactionToEdit({ id: 'prefill-' + Date.now(), amount: amount });
+        setIsFormOpen(true);
+      };
+
+      if (!currentUser) {
+        return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
+      }
+
+      const nextSerial = transactions.length > 0 
+        ? Math.max(...transactions.map(t => t.serial)) + 1 
+        : 1;
+
+      return (
+        <div className="app-container">
+          <header className="app-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px' }}>
+            <div>
+              <h1 className="header-title" style={{ margin: 0, fontSize: '24px' }}>হিসাবের খাতা</h1>
+              <p className="header-subtitle" style={{ margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                👤 {currentUser.name}
+              </p>
+            </div>
+            <button 
+              onClick={handleLogout} 
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.15)', 
+                border: 'none', 
+                borderRadius: '12px', 
+                width: '40px',
+                height: '40px',
+                color: '#fff', 
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background-color 0.2s',
+                outline: 'none'
+              }}
+              title="প্রোফাইল লক করুন"
+            >
+              <LockIcon size={18} />
+            </button>
+          </header>
+
+          {activeTab === 'home' && (
+            <Dashboard 
+              transactions={transactions} 
+              categories={categories} 
+              onAddClick={() => { setTransactionToEdit(null); setIsFormOpen(true); }} 
+              onViewSubTab={handleViewSubTab} 
+            />
+          )}
+
+          {activeTab === 'history' && (
+            <TransactionHistory 
+              transactions={transactions} 
+              categories={categories} 
+              onEdit={tx => { setTransactionToEdit(tx); setIsFormOpen(true); }} 
+              onDelete={handleDeleteTransaction} 
+              onUpdate={handleSaveTransaction}
+              initialSubTab={initialSubTab}
+              initialStatusFilter={initialStatusFilter}
+              initialCategoryFilter={initialCategoryFilter} 
+            />
+          )}
+
+          {activeTab === 'calculator' && (
+            <CalculatorTab onAddWithAmount={handleAddWithAmount} />
+          )}
+
+          {activeTab === 'report' && (
+            <Report transactions={transactions} categories={categories} />
+          )}
+
+          {activeTab === 'settings' && (
+            <Settings 
+              categories={categories} 
+              onRestoreSuccess={handleRestoreSuccess} 
+              onClearAllData={handleClearAllData} 
+              currentUser={currentUser}
+              onLogout={handleLogout}
+              onProfileUpdate={handleLoginSuccess}
+            />
+          )}
+
+          <nav className="bottom-nav">
+            <button type="button" className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => { setActiveTab('home'); setInitialSubTab('all'); setInitialStatusFilter('all'); setInitialCategoryFilter('all'); }}><HomeIcon /><span style={{marginTop:'2px'}}>হোম</span></button>
+            <button type="button" className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} onClick={() => { setActiveTab('history'); setInitialSubTab('all'); setInitialStatusFilter('all'); setInitialCategoryFilter('all'); }}><ListIcon /><span style={{marginTop:'2px'}}>হিসাব</span></button>
+            <button type="button" className={`nav-item ${activeTab === 'calculator' ? 'active' : ''}`} onClick={() => setActiveTab('calculator')}><CalculatorIcon /><span style={{marginTop:'2px'}}>ক্যালকুলেটর</span></button>
+            <button type="button" className={`nav-item ${activeTab === 'report' ? 'active' : ''}`} onClick={() => setActiveTab('report')}><ReportIcon /><span style={{marginTop:'2px'}}>রিপোর্ট</span></button>
+            <button type="button" className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}><SettingsIcon /><span style={{marginTop:'2px'}}>সেটিংস</span></button>
+          </nav>
+
+          <TransactionForm 
+            isOpen={isFormOpen} 
+            onClose={() => { setIsFormOpen(false); setTransactionToEdit(null); }} 
+            onSave={handleSaveTransaction} 
+            transactionToEdit={transactionToEdit} 
+            categories={categories} 
+            nextSerial={nextSerial} 
+          />
+        </div>
+      );
+    }
+
+    // ==========================================
+    // RENDER React DOM
+    // ==========================================
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

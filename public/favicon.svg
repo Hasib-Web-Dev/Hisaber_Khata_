@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#115e59" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.15" />
+    </filter>
+  </defs>
+  <!-- Background Card -->
+  <rect width="512" height="512" rx="110" fill="url(#grad)"/>
+  
+  <!-- Notebook Group with Shadow -->
+  <g filter="url(#shadow)">
+    <!-- Pages (White stack) -->
+    <rect x="140" y="120" width="240" height="290" rx="16" fill="#ffffff" />
+    <rect x="148" y="112" width="224" height="10" rx="4" fill="#cbd5e1" />
+    
+    <!-- Ledger Lines -->
+    <line x1="180" y1="180" x2="340" y2="180" stroke="#94a3b8" stroke-width="6" stroke-linecap="round" />
+    <line x1="180" y1="230" x2="340" y2="230" stroke="#94a3b8" stroke-width="6" stroke-linecap="round" />
+    <line x1="180" y1="280" x2="300" y2="280" stroke="#94a3b8" stroke-width="6" stroke-linecap="round" />
+    
+    <!-- Red Accent Margin line -->
+    <line x1="210" y1="140" x2="210" y2="380" stroke="#f43f5e" stroke-width="3" stroke-dasharray="6,4" />
+    
+    <!-- Taka Symbol Graphic -->
+    <text x="250" y="360" font-family="'Inter', sans-serif" font-size="70" font-weight="bold" fill="#0f766e" text-anchor="middle">৳</text>
+  </g>
+  
+  <!-- Pencil Graphic -->
+  <g transform="translate(320, 290) rotate(15)" filter="url(#shadow)">
+    <path d="M 0 0 L 25 -40 L 45 -30 L 20 10 Z" fill="#f59e0b" />
+    <path d="M 25 -40 L 35 -56 L 55 -46 L 45 -30 Z" fill="#ef4444" /> <!-- Eraser -->
+    <path d="M 0 0 L -15 15 L 20 10 Z" fill="#ffedd5" /> <!-- Tip -->
+    <polygon points="-15,15 -7,10 -3,13" fill="#1e293b" /> <!-- Lead -->
+  </g>
+</svg>

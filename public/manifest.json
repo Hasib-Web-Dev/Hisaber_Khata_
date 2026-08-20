@@ -1,0 +1,25 @@
+{
+  "name": "হিসাবের খাতা - Hisaber Khata",
+  "short_name": "হিসাবের খাতা",
+  "description": "আপনার প্রতিদিনের হিসাব সহজে ও নিরাপদে রাখুন",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "categories": ["finance", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
